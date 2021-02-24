@@ -1,6 +1,6 @@
 import Foundation
 
-open class Task: Equatable {
+open class BarrierTask: Equatable {
     private let _uuid: UUID
     public var uuid: UUID {
         get {
@@ -41,7 +41,7 @@ open class Task: Equatable {
         }
     }
 
-    public static func ==(lhs: Task, rhs: Task) -> Bool {
+    public static func ==(lhs: BarrierTask, rhs: BarrierTask) -> Bool {
         if lhs === rhs {
             return true
         }

@@ -3,13 +3,13 @@ import Foundation
 
 public class BarrierWorker {
 
-    let taskQ: AnyChannel<Task>
+    let taskQ: AnyChannel<BarrierTask>
 
     let tokenRequestWriter: (_ req: TokenRequest) -> Void
     let tokenReleaseWriter: (_ req: Int) -> Void
     let tokenResponseQ: NonSelectableChannel<Int>
 
-    init(taskQ: AnyChannel<Task>,
+    init(taskQ: AnyChannel<BarrierTask>,
          tokenRequestWriter: @escaping (TokenRequest) -> Void,
          tokenReleaseWriter: @escaping (Int) -> Void) {
         self.taskQ = taskQ
@@ -30,7 +30,7 @@ public class BarrierWorker {
         }
     }
 
-    func getTokens(_ task: Task) {
+    func getTokens(_ task: BarrierTask) {
         let tokenRequest = TokenRequest(task.numTokens, { () -> Void in
             // todo: maybe not use closure ???
             self.tokenResponseQ.write(task.numTokens)

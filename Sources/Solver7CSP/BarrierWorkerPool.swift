@@ -10,13 +10,13 @@ public class BarrierWorkerPool {
         }
     }
 
-    let taskQ: AnyChannel<Task>
+    let taskQ: AnyChannel<BarrierTask>
 
     let tokenRequestWriter: (_ req: TokenRequest) -> Void
     let tokenReleaseWriter: (_ req: Int) -> Void
 
     init(numWorkers: Int,
-         taskQ: AnyChannel<Task>,
+         taskQ: AnyChannel<BarrierTask>,
          tokenRequestWriter: @escaping (_ req: TokenRequest) -> Void,
          tokenReleaseWriter: @escaping (_ req: Int) -> Void) {
         _numWorkers = numWorkers
