@@ -58,21 +58,6 @@ class LockTests: XCTestCase {
 
     }
 
-    func testAnother() {
-        print("starting")
-        defer {
-            print("all done") }
-        do {
-            print("in 1 deep")
-         do   {
-                print("in 2 deep")
-                defer {
-                    print("defer from 2 deep")
-                }
-            }
-            print("back in 1 deep")
-        }
-    }
 
     func testMultipleDoWaits() throws {
 
@@ -91,7 +76,7 @@ class LockTests: XCTestCase {
             tc.start()
         }
 
-        sleep(3)
+        sleep(2)
 
         for _ in 1...20 {
             sleep(1)
@@ -102,8 +87,6 @@ class LockTests: XCTestCase {
         }
 
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 120))
-
-
     }
 
     func test100Threads() {

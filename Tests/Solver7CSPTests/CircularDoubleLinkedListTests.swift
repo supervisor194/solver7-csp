@@ -7,7 +7,9 @@ class CircularDoubleLinkedListTests: XCTestCase {
 
     func testOne() {
         let c = CircularDoubleLinkedList<String>()
+        XCTAssertEqual(0, c.size)
         let n1 = c.add("howdy doody")
+        XCTAssertEqual(1, c.size)
         XCTAssertEqual("howdy doody", n1.getValue())
         c.remove(n1)
         XCTAssertEqual(0, c.size)

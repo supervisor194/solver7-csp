@@ -7,7 +7,7 @@ import Atomics
 
 
 
-class BarrierTests: XCTestCase {
+class PipelineTests: XCTestCase {
 
 
     public func testB1() throws {
