@@ -114,7 +114,6 @@ class NonSelectableChannelTests : XCTestCase {
         XCTAssertEqual(100, val?.val)
 
         c.write(nil)
-        print("count is: \(q.count)")
         XCTAssertEqual(1, q.count)
 
         let val2 = c.read()

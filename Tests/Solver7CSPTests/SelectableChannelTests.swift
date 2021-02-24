@@ -10,14 +10,16 @@ class SelectableChannelTests : XCTestCase {
         let s = AnyStore<String>(q)
         let c = SelectableChannel<String>(id: "c1", store: s, lockType: LockType.NON_FAIR_LOCK)
         c.setHandler({ () -> Void in
-            print("we have a string: \(c.read())")
+            let str = c.read()
+            // print("we have a string: \(str)")
         })
 
         let q2 = LinkedListQueue<Int>(max: 100)
         let s2 = AnyStore<Int>(q2)
         let c2 = SelectableChannel<Int>(id: "c2", store: s2, lockType: LockType.NON_FAIR_LOCK)
         c2.setHandler( { () -> Void in
-            print("we have an int: \(c2.read())")
+            let i = c2.read()
+            // print("we have an int: \(i)")
         })
 
         c.write("howdy doody")
@@ -39,7 +41,7 @@ class SelectableChannelTests : XCTestCase {
         let myRunnable = { () -> Void in
             for i in 1...10 {
                 c.write("string cnt \(i)")
-                sleep(2)
+                sleep(1)
             }
         }
         let tc = ThreadContext(name: "howdy doody 1", execute: myRunnable)
@@ -66,7 +68,7 @@ class SelectableChannelTests : XCTestCase {
         XCTAssertFalse(selector.removeSelectable("c1"))
         XCTAssertFalse(selector.removeSelectable("c2"))
 
-        print ("all done")
+        // print ("all done")
     }
 
     public func testWithTimers() throws  {
@@ -76,7 +78,8 @@ class SelectableChannelTests : XCTestCase {
         let s = AnyStore<String>(q)
         let c = SelectableChannel<String>(id: "c1", store: s, lockType: LockType.NON_FAIR_LOCK)
         c.setHandler({ () -> Void in
-            print("we have a string: \(c.read())")
+            let str = c.read()
+            // print("we have a string: \(str))")
             numMsgs += 1
         })
         let writer = { () -> Void in
@@ -88,7 +91,7 @@ class SelectableChannelTests : XCTestCase {
                 }
                 usleep(250000)
             }
-            print("done with writer")
+            // print("done with writer")
         }
         let tc = ThreadContext(name: "writer1", execute: writer)
         tc.start()
@@ -99,7 +102,8 @@ class SelectableChannelTests : XCTestCase {
         let s2 = AnyStore<Int>(q2)
         let c2 = SelectableChannel<Int>(id: "c2", store: s2, lockType: LockType.NON_FAIR_LOCK)
         c2.setHandler({ () -> Void in
-            print("we have an int: \(c2.read())")
+            let i = c2.read()
+            // print("we have an int: \(i)")
             numInts += 1
         })
         let writer2 = { () -> Void in
@@ -111,11 +115,10 @@ class SelectableChannelTests : XCTestCase {
                 }
                 usleep(200000)
             }
-            print("done with writer2")
+            // print("done with writer2")
         }
         let tc2 = ThreadContext( name: "writer2", execute: writer2)
         tc2.start()
-
 
         var done = false
 
@@ -123,7 +126,8 @@ class SelectableChannelTests : XCTestCase {
         let t1 = Timeout<String>(id: "t1")
         t1.setHandler({ () -> Void in
             timerNum += 1
-            print("timer 1 has: \(t1.read())")
+            let i = t1.read()
+            // print("timer 1 has: \(i)")
             if timerNum == 20 {
                 done=true
             }

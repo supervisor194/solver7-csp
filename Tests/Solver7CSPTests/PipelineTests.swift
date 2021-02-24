@@ -42,7 +42,7 @@ class PipelineTests: XCTestCase {
         }
         l1.await(TimeoutState.computeTimeoutTimespec(sec: 30, nanos:0 ))
         d0.stop()
-        print("done :\(d0.milliseconds)")
+        // print("done :\(d0.milliseconds)")
 
         ////////////
 
@@ -97,14 +97,14 @@ class PipelineTests: XCTestCase {
                 taskQ2.read(into: &msgs, upTo: 1000)
                 cnt+=msgs.count
             }
-            print("done r3")
+            // print("done r3")
             l2.countDown()
         }
         let tc3 = ThreadContext(name: "tc3", execute: r3)
         tc3.start()
         l2.await(TimeoutState.computeTimeoutTimespec(sec: 60, nanos: 0))
         d.stop()
-        print("duration: \(d.milliseconds)")
+        // print("duration: \(d.milliseconds)")
 
     }
 
