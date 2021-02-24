@@ -79,7 +79,8 @@ public class CircularDoubleLinkedList<T> {
 }
 
 
-class CDLLNode<T> {
+public class CDLLNode<T> {
+
     var value: T?
     var prev: CDLLNode<T>?
     var next: CDLLNode<T>?

@@ -94,7 +94,7 @@ class LockTests: XCTestCase {
         sleep(3)
 
         for _ in 1...20 {
-            sleep(5)
+            sleep(1)
             lock.lock()
             lock.doNotify()
             lock.unlock()

@@ -3,7 +3,7 @@ import XCTest
 
 import Foundation
 
-class CDLLTests : XCTestCase {
+class CircularDoubleLinkedListTests: XCTestCase {
 
     func testOne() {
         let c = CircularDoubleLinkedList<String>()

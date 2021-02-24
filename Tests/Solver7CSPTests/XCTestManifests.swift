@@ -8,7 +8,7 @@ public func allTests() -> [XCTestCaseEntry] {
         testCase(NonSelectableChannelTests.allTests),
         testCase(LockTests.allTests),
         testCase(TimeoutTests.allTests),
-        testCase(CDLLTests.allTests),
+        testCase(CircularDoubleLinkedListTests.allTests),
 
     ]
 }

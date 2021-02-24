@@ -1,15 +1,15 @@
 import Foundation
 
 public class SingleValueStore<T: Equatable>: Store {
-    func get(into: inout [T?], upTo: Int) -> (Int, Int) {
+    public func get(into: inout [T?], upTo: Int) -> (Int, Int) {
         fatalError("need to implement")
     }
 
-    func putForNode(_ item: T?) -> (Int, U: StoreNode) {
+    public func putForNode(_ item: T?) -> (Int, U: StoreNode) {
         fatalError("putForNode(_:) has not been implemented")
     }
 
-    func getWithCount() -> (T?, Int) {
+    public func getWithCount() -> (T?, Int) {
         fatalError("getWithCount() has not been implemented")
     }
 
@@ -19,13 +19,13 @@ public class SingleValueStore<T: Equatable>: Store {
 
     }
 
-    var ormax: Int {
+    public var max: Int {
         get {
             1
         }
     }
 
-    var count: Int {
+    public var count: Int {
         get {
             value != nil ? 1 : 0
         }
@@ -48,7 +48,7 @@ public class SingleValueStore<T: Equatable>: Store {
         return o
     }
 
-    var state: StoreState {
+    public var state: StoreState {
         get {
             value != nil ? StoreState.FULL : StoreState.EMPTY
         }
