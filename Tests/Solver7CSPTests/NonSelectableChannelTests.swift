@@ -106,51 +106,59 @@ class NonSelectableChannelTests : XCTestCase {
         let s = AnyStore<MyInt64>(q)
         let c = NonSelectableChannel<MyInt64>(store: s, lockType: LockType.NON_FAIR_LOCK)
 
-        print("count is: \(q.count)")
+        XCTAssertEqual(0, q.count)
         c.write(MyInt64(100))
 
-        print("count is: \(q.count)")
+        XCTAssertEqual(1, q.count)
         let val = c.read()
-        print("value is: \(val?.val)")
+        XCTAssertEqual(100, val?.val)
 
         c.write(nil)
         print("count is: \(q.count)")
+        XCTAssertEqual(1, q.count)
 
         let val2 = c.read()
-
-        print("we have a : \(val2)")
-        print("count is: \(q.count)")
+        XCTAssertEqual(nil, val2?.val)
+        XCTAssertEqual(0, q.count)
     }
 
-    func testFull() {
+    func testFull() throws {
 
         let q = LinkedListQueue<String>(max:10)
         let s = AnyStore<String>(q)
         let c = NonSelectableChannel<String>(store: s, lockType: LockType.NON_FAIR_LOCK)
 
-
+        let l1 = try CountdownLatch(1)
         func dm() -> Void {
-            print("in reader dm")
+            l1.countDown()
         }
 
+        let l2 = try CountdownLatch(100)
         let r = { () -> Void in
             var cnt = 0
             repeat {
                 let x = c.read()
-                print("got: \(x) at: \(cnt)")
+                // print("read: \(x)")
                 cnt += 1
-                // sleep(1)
+                l2.countDown()
             } while cnt<100
-            print("done with reader...")
+            // print("done with r")
         }
-        let tc = ThreadContext(name: "reader", destroyMe: dm, execute: r)
-        tc.start()
+        let reader = ThreadContext(name: "reader", destroyMe: dm, execute: r)
+        reader.start()
 
-        for i in 1...100 {
-            print("writing howdy doody \(i)")
-            c.write("howdy doody \(i)")
+        let writer = ThreadContext(name: "writer") {
+            for i in 1...100 {
+                c.write("howdy doody \(i)")
+            }
         }
+        writer.start()
 
+        l2.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
+        XCTAssertEqual(0, l2.get())
+
+        l1.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
+        XCTAssertEqual(0, l1.get())
     }
 
     static var allTests = [

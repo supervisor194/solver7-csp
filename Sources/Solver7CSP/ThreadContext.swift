@@ -11,10 +11,10 @@ public class ThreadContext {
 
 
     static func destroyMe(_ ptr: UnsafeMutableRawPointer) -> Void {
-        print("destroy me called: \(ptr)")
+        // print("destroy me called: \(ptr)")
         let ctxPtr = ptr.bindMemory(to: ThreadContext.self, capacity: 1)
         let ctx = ctxPtr.pointee
-        print("destroy me - we have : \(ctx.name)")
+        // print("destroy me - we have : \(ctx.name)")
         if let dm = ctx._destroyMe {
             dm()
         }
