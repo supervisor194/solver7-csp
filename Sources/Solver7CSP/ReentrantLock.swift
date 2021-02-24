@@ -115,7 +115,7 @@ open class ReentrantLock: Lock {
     }
 
     // must have the lock
-    public func doWait(_ timeoutAt: inout timespec) {
+    public func doWait(_ timeoutAt: inout timespec) -> Void {
         let waiter = waiterPool.get()!
         waiter._tc = ThreadContext.currentContext()
         waiter.setStatus(status: ReentrantLock.WAITER_INITIAL)

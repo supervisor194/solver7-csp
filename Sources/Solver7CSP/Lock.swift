@@ -8,6 +8,8 @@ public protocol Lock {
 
     func doWait() -> Void
 
+    func doWait(_ timeoutAt: inout timespec) -> Void
+
     func doNotify() -> Void
 
     func reUp() -> Void

@@ -1,72 +1,40 @@
 import Foundation
 import Atomics
 
-public class CountdownLatch {
+public class CountdownLatch2 {
 
-    private static let latchCnt = ManagedAtomic<Int>(0)
+    private let n: ManagedAtomic<Int>
 
-    private let c: SelectableChannel<Int>
-    private let t: Timeout<String>
+    private let l: Lock
 
-    private var tokens: Int
-
-    private var selector: Selector
-
-    private var timedout = false
-
-    public init(_ n: Int) throws {
-        tokens = n
-
-        let q = LinkedListQueue<Int>(max: 10)
-        let s = AnyStore<Int>(q)
-        let latchCnt = CountdownLatch.latchCnt.loadThenWrappingIncrement(ordering: .relaxed)
-        c = SelectableChannel<Int>(id: "latch:\(latchCnt)", store: s, lockType: LockType.NON_FAIR_LOCK)
-        t = Timeout<String>(id: "latchTimeout:\(latchCnt)")
-        var selectables = [Selectable]()
-        selectables.append(c)
-        selectables.append(t)
-        selector = try FairSelector(selectables)
-        c.setHandler(handleC)
-        t.setHandler(handleT)
+    public init(_ n: Int, _ maxThreads: Int = 10) {
+        self.n = ManagedAtomic<Int>(n)
+        l = NonFairLock(maxThreads: maxThreads)
     }
 
-
-    private func handleC() -> Void {
-        let n = c.read()!
-        tokens = max(0, tokens - n)
-    }
-
-    private func handleT() -> Void {
-        t.read()
-        timedout = true
-    }
-
-    public func await(_ timeoutTime: timespec) {
-        t.setTimeout(timeoutTime)
-
-        while true {
-            let s = selector.select()
-            s.handle()
-            if timedout {
-                return
-            }
-            if tokens == 0 {
-                return
-            }
+    public func await(_ timeoutTime: inout timespec) {
+        l.lock()
+        defer {
+            l.unlock()
         }
+        l.doWait(&timeoutTime)
     }
 
     public func countDown() -> Void {
-        c.write(1)
+        n.wrappingDecrement(by: 1, ordering: .relaxed)
     }
 
-    public func countDown(_ n: Int) -> Void {
-        c.write(n)
+    public func countDown(_ by: Int) ->Void {
+        n.wrappingDecrement(by: by, ordering: .relaxed)
     }
 
     public func get() -> Int {
-        tokens
+        let c = n.load(ordering: .relaxed)
+        if c < 0 {
+            n.store(0, ordering: .relaxed)
+            return 0
+        }
+        return c
     }
-
 
 }

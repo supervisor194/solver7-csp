@@ -77,6 +77,52 @@ class LatchTests :XCTestCase  {
         XCTAssertEqual(100, latch.get())
     }
 
+
+    public func testCountdownLatch2() throws  {
+        let latch = try CountdownLatch2(100)
+        let tc = ThreadContext(name: "writer") {
+            for _ in 1...90 {
+                latch.countDown()
+            }
+            latch.countDown(5)
+            latch.countDown(5)
+        }
+        tc.start()
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 3000)
+        latch.await(&timeoutAt)
+        XCTAssertEqual(0, latch.get())
+    }
+
+    public func testCountdownLatch2Exceed() throws {
+        let latch = try CountdownLatch2(100)
+        let tc = ThreadContext(name: "writer") {
+            for _ in 1...90 {
+                latch.countDown()
+            }
+            latch.countDown(50)
+        }
+        tc.start()
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 3000)
+        latch.await(&timeoutAt)
+        XCTAssertEqual(0, latch.get())
+    }
+
+
+    public func testCountdownLatch2Timeout() throws  {
+        let latch = try CountdownLatch2(100)
+
+        var t1 = timeval()
+        gettimeofday(&t1, nil)
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 2100)
+        latch.await(&timeoutAt)
+        var t2 = timeval()
+        gettimeofday(&t2, nil)
+
+        XCTAssertTrue( abs(TimeoutState.differenceInUSec(t1,t2)) > 2000000)
+        XCTAssertEqual(100, latch.get())
+
+    }
+
     static var allTests = [
         ("testManyThreadsTo0", testManyThreadsTo0),
         ("testOneBigDecrementBeyond0", testOneBigDecrementBeyond0),
