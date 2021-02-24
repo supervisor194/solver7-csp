@@ -1,6 +1,6 @@
 import Foundation
 
-class BarrierManager {
+public class BarrierManager {
 
     let max: Int
     var available: Int

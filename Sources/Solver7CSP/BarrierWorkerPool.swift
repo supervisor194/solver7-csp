@@ -1,6 +1,6 @@
 import Foundation
 
-class BarrierWorkerPool {
+public class BarrierWorkerPool {
 
     let _numWorkers: Int
 

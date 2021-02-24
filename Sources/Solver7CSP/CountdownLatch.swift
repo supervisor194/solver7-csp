@@ -1,7 +1,7 @@
 import Foundation
 import Atomics
 
-class CountdownLatch {
+public class CountdownLatch {
 
     private static let latchCnt = ManagedAtomic<Int>(0)
 

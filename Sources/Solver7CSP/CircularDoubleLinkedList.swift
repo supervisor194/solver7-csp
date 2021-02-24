@@ -1,6 +1,6 @@
 import Foundation
 
-class CDLL<T> {
+public class CircularDoubleLinkedList<T> {
 
     var _size = 0
 

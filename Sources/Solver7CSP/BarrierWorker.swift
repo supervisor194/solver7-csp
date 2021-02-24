@@ -1,7 +1,7 @@
 import Foundation
 
 
-class BarrierWorker {
+public class BarrierWorker {
 
     let taskQ: AnyChannel<Task>
 

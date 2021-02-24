@@ -6,7 +6,7 @@ import Foundation
 class CDLLTests : XCTestCase {
 
     func testOne() {
-        let c = CDLL<String>()
+        let c = CircularDoubleLinkedList<String>()
         let n1 = c.add("howdy doody")
         XCTAssertEqual("howdy doody", n1.getValue())
         c.remove(n1)
@@ -14,7 +14,7 @@ class CDLLTests : XCTestCase {
     }
 
     func testMany() {
-        let c = CDLL<String>()
+        let c = CircularDoubleLinkedList<String>()
         for i in 1...100 {
             c.add("howdy doody \(i)")
         }

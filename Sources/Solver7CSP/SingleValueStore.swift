@@ -1,6 +1,6 @@
 import Foundation
 
-class SingleValueStore<T: Equatable>: Store {
+public class SingleValueStore<T: Equatable>: Store {
     func get(into: inout [T?], upTo: Int) -> (Int, Int) {
         fatalError("need to implement")
     }
@@ -19,7 +19,7 @@ class SingleValueStore<T: Equatable>: Store {
 
     }
 
-    var max: Int {
+    var ormax: Int {
         get {
             1
         }

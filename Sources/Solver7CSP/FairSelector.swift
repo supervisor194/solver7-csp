@@ -10,7 +10,7 @@ public class FairSelector: Selector {
     let state = ManagedAtomic<Int>(0)
     let stateLock = NonFairLock(maxThreads: 10)
 
-    let selectables = CDLL<Selectable>()
+    let selectables = CircularDoubleLinkedList<Selectable>()
     var idealNext: CDLLNode<Selectable>? = nil
 
     private static let INACTIVE = 0

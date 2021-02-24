@@ -1,7 +1,7 @@
 import Foundation
 import Atomics
 
-class Semaphore {
+public class Semaphore {
     private static let semCnt = ManagedAtomic<Int>(0)
 
     let tokens: SelectableChannel<Int>
