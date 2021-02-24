@@ -101,7 +101,7 @@ class LockTests: XCTestCase {
 
         }
 
-        latch.await(TimeoutState.computeTimeoutTimespec(sec: 120, nanos: 0))
+        latch.await(TimeoutState.computeTimeoutTimespec(sec: 120))
 
 
     }

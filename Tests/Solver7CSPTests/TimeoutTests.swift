@@ -21,6 +21,22 @@ class TimeoutTests: XCTestCase {
         XCTAssertEqual(nsec, ts.tv_nsec)
     }
 
+    public func testComputeTimeoutTimespecWithMillis() throws  {
+        var now = timeval()
+        gettimeofday(&now, nil)
+        let ts = TimeoutState.computeTimeoutTimespec(millis: 37500, now: now)
+
+        var seconds = now.tv_sec + 37
+        var nsec = (Int) ( now.tv_usec) * 1000 + 500000000
+
+        if nsec > 1000000000 {
+            seconds += 1
+            nsec -= 1000000000
+        }
+        XCTAssertEqual(seconds, ts.tv_sec)
+        XCTAssertEqual(nsec, ts.tv_nsec)
+    }
+
     public func testExpirations() throws {
 
         var now = timeval()

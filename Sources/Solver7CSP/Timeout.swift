@@ -5,9 +5,21 @@ public class TimeoutState {
     public static let ENABLED: Int = 1
     public static let CONSUMED: Int = 2
 
-    public static func computeTimeoutTimespec(sec: Int, nanos: Int) -> timespec {
+    public static func computeTimeoutTimespec(sec: Int, nanos: Int = 0) -> timespec {
         var now = timeval()
         gettimeofday(&now, nil)
+        return computeTimeoutTimespec(sec: sec, nanos: nanos, now: now)
+    }
+
+    public static func computeTimeoutTimespec(millis: Int) -> timespec {
+        var now = timeval()
+        gettimeofday(&now, nil)
+        return computeTimeoutTimespec(millis: millis, now: now)
+    }
+
+    public static func computeTimeoutTimespec(millis: Int, now: timeval) -> timespec {
+        let sec = millis / 1000
+        let nanos = (millis - 1000 * sec) * 1000000
         return computeTimeoutTimespec(sec: sec, nanos: nanos, now: now)
     }
 
