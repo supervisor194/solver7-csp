@@ -18,7 +18,7 @@ open class ReentrantLock: Lock {
     // Build a non locking queue with tail and head.
     // The tail is managed via a pointer to a Node to enable atomic modifications
     private let waitQTailPtr: UnsafeAtomic<NodePtr>
-    private var waitQHeadPtr: UnsafeAtomic<NodePtr>
+    var waitQHeadPtr: UnsafeAtomic<NodePtr>
 
     private let waiterQ: LinkedListQueue<TCNode>
     private let waiterPool: LinkedListQueue<TCNode>

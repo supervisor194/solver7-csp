@@ -7,7 +7,7 @@ public class Semaphore {
     let tokens: SelectableChannel<Int>
 
     public init(_ n: Int, name: String = "sem", maxWriters: Int = 10, maxReaders: Int = 10) throws {
-        let q = LinkedListQueue<Int>(max: n + 1)
+        let q = LinkedListQueue<Int>(max: maxWriters + maxReaders)
         let s = AnyStore(q)
         let semCnt = Semaphore.semCnt.loadThenWrappingIncrement(ordering: .relaxed)
         tokens = SelectableChannel(id: "\(name):\(semCnt)", store: s,
