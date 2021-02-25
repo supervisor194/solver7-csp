@@ -134,7 +134,7 @@ public class AnyStore<T>: Store {
         _remove(item)
     }
 
-    init<S: Store>(_ s: S) where S.Item == T {
+    public init<S: Store>(_ s: S) where S.Item == T {
         _getMax = s.getMax
         _getCount = s.getCount
         _getState = s.getState

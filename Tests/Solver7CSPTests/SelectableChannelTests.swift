@@ -8,7 +8,7 @@ class SelectableChannelTests : XCTestCase {
     func testFoo() throws {
         let q = LinkedListQueue<String>(max: 100)
         let s = AnyStore<String>(q)
-        let c = SelectableChannel<String>(id: "c1", store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = SelectableChannel<String>(id: "c1", store: s, maxWriters: 1, maxReaders: 2, lockType: LockType.NON_FAIR_LOCK)
         c.setHandler({ () -> Void in
             let str = c.read()
             // print("we have a string: \(str)")
@@ -16,7 +16,7 @@ class SelectableChannelTests : XCTestCase {
 
         let q2 = LinkedListQueue<Int>(max: 100)
         let s2 = AnyStore<Int>(q2)
-        let c2 = SelectableChannel<Int>(id: "c2", store: s2, lockType: LockType.NON_FAIR_LOCK)
+        let c2 = SelectableChannel<Int>(id: "c2", store: s2, maxWriters: 2, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
         c2.setHandler( { () -> Void in
             let i = c2.read()
             // print("we have an int: \(i)")
@@ -76,7 +76,7 @@ class SelectableChannelTests : XCTestCase {
 
         let q = LinkedListQueue<String>(max: 100)
         let s = AnyStore<String>(q)
-        let c = SelectableChannel<String>(id: "c1", store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = SelectableChannel<String>(id: "c1", store: s, maxWriters: 1, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
         c.setHandler({ () -> Void in
             let str = c.read()
             // print("we have a string: \(str))")
@@ -100,7 +100,7 @@ class SelectableChannelTests : XCTestCase {
 
         let q2 = LinkedListQueue<Int>(max: 100)
         let s2 = AnyStore<Int>(q2)
-        let c2 = SelectableChannel<Int>(id: "c2", store: s2, lockType: LockType.NON_FAIR_LOCK)
+        let c2 = SelectableChannel<Int>(id: "c2", store: s2, maxWriters: 2, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
         c2.setHandler({ () -> Void in
             let i = c2.read()
             // print("we have an int: \(i)")

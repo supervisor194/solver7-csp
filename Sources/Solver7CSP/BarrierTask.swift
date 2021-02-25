@@ -29,7 +29,7 @@ open class BarrierTask: Equatable {
         _handler()
     }
 
-    public init(_ uuid: UUID, _ numTokens: Int, _ handler: (() -> Void)? = nil) {
+    public init(uuid: UUID, numTokens: Int, handler: (() -> Void)? = nil) {
         _uuid = uuid
         _numTokens = numTokens
         if let h = handler {

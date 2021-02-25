@@ -6,7 +6,7 @@ import Foundation
 class LatchTests :XCTestCase  {
 
     public func testManyThreadsTo0() throws {
-        let latch = try CountdownLatch(1000)
+        let latch = try CountdownLatch(1000, maxWriters: 3, maxReaders: 1)
 
         let r1 = { () -> Void in
             for _ in 1...100 {

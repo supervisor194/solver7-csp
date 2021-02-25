@@ -15,7 +15,7 @@ public class NonSelectableChannel<T>: Channel {
 
     var s: AnyStore<T>
 
-    public init(store: AnyStore<T>, lockType: LockType = LockType.NON_FAIR_LOCK) {
+    public init(store: AnyStore<T>,  maxWriters: Int = 10, maxReaders: Int = 10, lockType: LockType = LockType.NON_FAIR_LOCK) {
         s = store
         capacity = store.max
         capacityMinus1 = capacity - 1
@@ -25,11 +25,11 @@ public class NonSelectableChannel<T>: Channel {
 
         switch lockType {
         case .FAIR_LOCK:
-            writeLock = FairLock(maxThreads: 100)
-            readLock = FairLock(maxThreads: 100)
+            writeLock = FairLock(maxThreads: maxWriters)
+            readLock = FairLock(maxThreads: maxReaders)
         default:
-            writeLock = NonFairLock(maxThreads: 100)
-            readLock = NonFairLock(maxThreads: 100)
+            writeLock = NonFairLock(maxThreads: maxWriters)
+            readLock = NonFairLock(maxThreads: maxReaders)
         }
     }
 

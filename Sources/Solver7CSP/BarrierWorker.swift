@@ -17,7 +17,7 @@ public class BarrierWorker {
         self.tokenReleaseWriter = tokenReleaseWriter
         let llq = LinkedListQueue<Int>(max: 2)
         let s = AnyStore<Int>(llq)
-        tokenResponseQ = NonSelectableChannel<Int>(store: s, lockType: LockType.NON_FAIR_LOCK)
+        tokenResponseQ = NonSelectableChannel<Int>(store: s, maxWriters: 1, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
     }
 
     public func run() -> Void {

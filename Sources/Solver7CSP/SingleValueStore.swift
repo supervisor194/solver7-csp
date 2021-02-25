@@ -15,7 +15,7 @@ public class SingleValueStore<T: Equatable>: Store {
 
     var value: T?
 
-    init() {
+    public init() {
 
     }
 
