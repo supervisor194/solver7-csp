@@ -8,7 +8,7 @@ class SemaphoreTests : XCTestCase {
     public func testBasic() throws {
         let N = 10
         var cnt = 0
-        let s = try Semaphore(1, maxWriters: 100, maxReaders: 100)
+        let s = try Semaphore(1, maxWriters: 11, maxReaders: 11)
         let latch = try CountdownLatch(N, maxWriters: 1, maxReaders: 1)
         s.take()
         for i in 1...10 {
@@ -23,7 +23,7 @@ class SemaphoreTests : XCTestCase {
             tc.start()
         }
         s.release()
-        latch.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
+        latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
         XCTAssertEqual(100*10, cnt)
     }
 
@@ -32,10 +32,10 @@ class SemaphoreTests : XCTestCase {
         let l0 = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
         let l1 = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
         let latch = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
-        let s = try Semaphore(100, maxWriters: 100, maxReaders: 100)
+        let s = try Semaphore(100, maxWriters: 3, maxReaders: 3)
         s.take(90)
         let tc = ThreadContext(name: "t") {
-            l0.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
+            l0.await(TimeoutState.computeTimeoutTimespec(sec: 5))
             s.take(50)
             for _ in 1...50 {
                 s.take(1)
@@ -46,7 +46,7 @@ class SemaphoreTests : XCTestCase {
         }
         tc.start()
         let tc2 = ThreadContext(name: "t2") {
-            l1.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
+            l1.await(TimeoutState.computeTimeoutTimespec(sec: 5))
             s.take(100)
             cnt+=1
             s.release(20)
@@ -62,7 +62,7 @@ class SemaphoreTests : XCTestCase {
         tc2.start()
         l0.countDown()
         s.release(90)
-        latch.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
+        latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
         XCTAssertEqual(2, cnt)
     }
 }

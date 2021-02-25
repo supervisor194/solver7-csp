@@ -42,7 +42,7 @@ class PipelineTests: XCTestCase {
         }
         l1.await(TimeoutState.computeTimeoutTimespec(sec: 30, nanos:0 ))
         d0.stop()
-        // print("done :\(d0.milliseconds)")
+        print("done :\(d0.milliseconds)")
 
         ////////////
 
@@ -104,7 +104,7 @@ class PipelineTests: XCTestCase {
         tc3.start()
         l2.await(TimeoutState.computeTimeoutTimespec(sec: 60, nanos: 0))
         d.stop()
-        // print("duration: \(d.milliseconds)")
+        print("duration: \(d.milliseconds)")
 
     }
 
