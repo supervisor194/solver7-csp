@@ -9,8 +9,7 @@ import Atomics
 
 class PipelineTests: XCTestCase {
 
-
-    public func testB1() throws {
+    public func testDispatchQueues() throws {
 
         let dqA = DispatchQueue(label: "A", attributes: .concurrent)
         let dqB = DispatchQueue(label: "B", attributes: .concurrent)
@@ -109,7 +108,7 @@ class PipelineTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testB1", testB1),
+        ("testB1", testDispatchQueues),
 
     ]
 }

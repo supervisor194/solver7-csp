@@ -10,7 +10,8 @@ class ChannelExamplesTests : XCTestCase {
     public func testSingleReaderSingleWriterBufferedChannel() throws {
 
 
-        let q = LinkedListQueue<String>(max: 100)
+        let anyStore : AnyStore<String> = AnyStore(LinkedListQueue(max: 10))
+
 
 
 

@@ -56,7 +56,6 @@ private extension Store {
 
 public class AnyStore<T>: Store {
 
-
     private let _getMax: () -> Int
 
     public var max: Int {
@@ -151,3 +150,4 @@ public class AnyStore<T>: Store {
 
 
 }
+

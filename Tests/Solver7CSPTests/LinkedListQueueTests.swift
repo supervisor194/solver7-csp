@@ -5,6 +5,44 @@ import Foundation
 
 class LinkedListQueueTests: XCTestCase {
 
+
+    func testManyWritersSingleReader() throws  {
+
+
+        let latch = try CountdownLatch(11) // 10 writers, 1 reader
+        let c = NonSelectableChannel(store: AnyStore( LinkedListQueue<String> (max: 10)))
+
+        for i in 1...10 {
+            let writer = ThreadContext(name: "writer\(i)") {
+                for n in 1...100 {
+                    c.write("writer\(i) message #\(n)")
+                }
+                latch.countDown()
+            }
+            writer.start()
+        }
+
+        var cnt = 0
+        for i in 1...1 {
+            let reader = ThreadContext(name: "reader\(i)") {
+                while true {
+                    c.read()
+                    cnt += 1
+                    if (cnt == 1000) {
+                        latch.countDown()
+                        return
+                    }
+                }
+            }
+            reader.start()
+        }
+
+        latch.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
+
+        XCTAssertEqual(0, latch.get())
+        XCTAssertEqual(1000, cnt)
+
+    }
     func testAll() {
 
         let q = LinkedListQueue<MyInt64>(max: 100)

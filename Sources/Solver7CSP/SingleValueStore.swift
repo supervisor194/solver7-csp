@@ -15,8 +15,7 @@ public class SingleValueStore<T: Equatable>: Store {
 
     var value: T?
 
-    public init() {
-
+    public required init(max: Int) {
     }
 
     public var max: Int {

@@ -20,7 +20,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
     var head: QStoreNode<T>
     var tail: QStoreNode<T>
 
-    public init(max: Int) {
+    public required init(max: Int) {
         _max = max
         tail = QStoreNode(nil)
         head = tail

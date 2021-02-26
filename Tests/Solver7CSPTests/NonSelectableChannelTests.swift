@@ -7,7 +7,7 @@ class NonSelectableChannelTests : XCTestCase {
 
     func testSingleValueStore() {
 
-        let svs = SingleValueStore<Int>()
+        let svs = SingleValueStore<Int>(max: 1)
         let s = AnyStore<Int>(svs)
         let c = NonSelectableChannel<Int>(store: s, lockType: LockType.NON_FAIR_LOCK)
 

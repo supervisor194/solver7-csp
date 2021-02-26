@@ -7,6 +7,7 @@ class BarrierTests : XCTestCase {
 
     public func test5Workers() throws {
 
+
         let taskStore = AnyStore(LinkedListQueue<BarrierTask>(max: 100))
         let taskChannel = AnyChannel(NonSelectableChannel<BarrierTask>(store: taskStore))
 
