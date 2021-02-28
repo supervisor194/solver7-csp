@@ -74,7 +74,7 @@ class SelectableChannelTests : XCTestCase {
     public func testWithTimers() throws  {
         var numMsgs = 0
 
-        let q = LinkedListQueue<String>(max: 100)
+        let q = LinkedListQueue<String>(max: 10)
         let s = AnyStore<String>(q)
         let c = SelectableChannel<String>(id: "c1", store: s, maxWriters: 1, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
         c.setHandler({ () -> Void in
@@ -98,7 +98,7 @@ class SelectableChannelTests : XCTestCase {
 
         var numInts = 0
 
-        let q2 = LinkedListQueue<Int>(max: 100)
+        let q2 = LinkedListQueue<Int>(max: 10)
         let s2 = AnyStore<Int>(q2)
         let c2 = SelectableChannel<Int>(id: "c2", store: s2, maxWriters: 2, maxReaders: 1, lockType: LockType.NON_FAIR_LOCK)
         c2.setHandler({ () -> Void in
@@ -130,6 +130,7 @@ class SelectableChannelTests : XCTestCase {
             // print("timer 1 has: \(i)")
             if timerNum == 20 {
                 done=true
+                return
             }
             t1.setTimeout(TimeoutState.computeTimeoutTimespec(sec: 0, nanos: 100000000), "timer: \(timerNum)")
         })
@@ -151,6 +152,7 @@ class SelectableChannelTests : XCTestCase {
         }
 
         XCTAssertEqual(100, numMsgs+numInts)
+        XCTAssertEqual(20, timerNum)
 
     }
 

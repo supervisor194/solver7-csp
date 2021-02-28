@@ -7,14 +7,14 @@ import XCTest
 extension ChannelFactory {
 
     enum Mine: ChannelCreator {
-        case foo100
-        case fooRW100(Int, Int)
+        case NSLLQ100
+        case NSRWLLQ100(Int, Int)
 
         public func create<T: Equatable>(t: T.Type) -> AnyChannel<T> {
             switch self {
-            case .foo100:
+            case .NSLLQ100:
                 return AnyChannel(NonSelectableChannel(store: AnyStore(LinkedListQueue<T>(max: 100))))
-            case let .fooRW100(maxWriters, maxReaders):
+            case let .NSRWLLQ100(maxWriters, maxReaders):
                 return AnyChannel(NonSelectableChannel(store: AnyStore(LinkedListQueue<T>(max: 100)),
                         maxWriters: maxWriters, maxReaders: maxReaders))
             }
@@ -32,8 +32,8 @@ class FactoryTest: XCTestCase {
         let sx = ChannelFactory.Default.SLLQ(id: "MySelectableChannel", max: 10).create(t: String.self)
         let y = ChannelFactory.Default.SVS.create(t: String.self)
 
-        let zz = ChannelFactory.Mine.foo100.create(t: Int.self)
-        let z2 = ChannelFactory.Mine.fooRW100(10, 1).create(t: Int.self)
+        let zz = ChannelFactory.Mine.NSLLQ100.create(t: Int.self)
+        let z2 = ChannelFactory.Mine.NSRWLLQ100(10, 1).create(t: Int.self)
 
         print("done")
     }
