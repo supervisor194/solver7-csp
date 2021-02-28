@@ -7,7 +7,7 @@ class NonSelectableChannelTests : XCTestCase {
 
     func testSingleValueStore() {
 
-        let svs = SingleValueStore<Int>(max: 1)
+        let svs = SingleValueStore<Int>()
         let s = AnyStore<Int>(svs)
         let c = NonSelectableChannel<Int>(store: s, lockType: LockType.NON_FAIR_LOCK)
 
@@ -118,14 +118,13 @@ class NonSelectableChannelTests : XCTestCase {
 
         let val2 = c.read()
         XCTAssertEqual(nil, val2?.val)
+        XCTAssertEqual(nil, val2)
         XCTAssertEqual(0, q.count)
     }
 
     func testFull() throws {
 
-        let q = LinkedListQueue<String>(max:10)
-        let s = AnyStore<String>(q)
-        let c = NonSelectableChannel<String>(store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max:10)))
 
         let l1 = try CountdownLatch(1)
         func dm() -> Void {

@@ -45,13 +45,8 @@ class PipelineTests: XCTestCase {
 
         ////////////
 
-        let llq1 = LinkedListQueue<String>(max: 1000)
-        let s1 = AnyStore<String>(llq1)
-        let taskQ1 = AnyChannel(NonSelectableChannel<String>(store: s1, lockType: LockType.NON_FAIR_LOCK))
-
-        let llq2 = LinkedListQueue<String>(max: 1000)
-        let s2 = AnyStore<String>(llq2)
-        let taskQ2 = AnyChannel(NonSelectableChannel<String>(store: s2, lockType: LockType.NON_FAIR_LOCK))
+        let taskQ1 = AnyChannel(NonSelectableChannel<String>(store: AnyStore(LinkedListQueue<String>(max: 1000))))
+        let taskQ2 = AnyChannel(NonSelectableChannel<String>(store: AnyStore(LinkedListQueue<String>(max: 1000))))
 
         var d = Duration()
         d.start()
