@@ -18,7 +18,6 @@ extension ChannelFactory {
                 return AnyChannel(NonSelectableChannel(store: AnyStore(LinkedListQueue<T>(max: 100)),
                         maxWriters: maxWriters, maxReaders: maxReaders))
             }
-            fatalError("hmmm, can't create")
         }
     }
 }
