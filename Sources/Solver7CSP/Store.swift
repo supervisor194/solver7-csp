@@ -1,5 +1,10 @@
 import Foundation
 
+/**
+ Note: A Store is in general not thread safe until wrapped by a Channel. The Channel must watch the
+ Store.count and provide the proper synchronization of the get/put of values with its writer/reader locks.
+ */
+
 public enum StoreState {
     case EMPTY, FULL, NONEMPTY
 }
