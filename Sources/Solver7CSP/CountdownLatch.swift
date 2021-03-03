@@ -1,7 +1,7 @@
 import Foundation
 import Atomics
 
-public class CountdownLatch2 {
+public class CountdownLatch {
 
     private let n: ManagedAtomic<Int>
 
@@ -9,7 +9,7 @@ public class CountdownLatch2 {
 
     public init(_ n: Int, _ maxThreads: Int = 10) {
         self.n = ManagedAtomic<Int>(n)
-        l = NonFairLock(maxThreads: maxThreads)
+        l = NonFairLock(maxThreads)
     }
 
     public func await(_ timeoutTime: inout timespec) {

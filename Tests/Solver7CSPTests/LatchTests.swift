@@ -6,7 +6,7 @@ import Foundation
 class LatchTests :XCTestCase  {
 
     public func testManyThreadsTo0() throws {
-        let latch = try CountdownLatch(1000, maxWriters: 3, maxReaders: 1)
+        let latch = try CountdownLatchViaChannel(1000)
 
         let r1 = { () -> Void in
             for _ in 1...100 {
@@ -44,7 +44,7 @@ class LatchTests :XCTestCase  {
     }
 
     public func testOneBigDecrementBeyond0() throws {
-        let latch = try CountdownLatch(100)
+        let latch = try CountdownLatchViaChannel(100)
 
         let r1 = { () -> Void in
             sleep(1)
@@ -65,7 +65,7 @@ class LatchTests :XCTestCase  {
 
 
     public func testTimeout() throws {
-        let latch = try CountdownLatch(100)
+        let latch = try CountdownLatchViaChannel(100)
 
         var t1 = timeval()
         gettimeofday(&t1, nil)
@@ -79,7 +79,7 @@ class LatchTests :XCTestCase  {
 
 
     public func testCountdownLatch2() throws  {
-        let latch = try CountdownLatch2(100)
+        let latch = try CountdownLatch(100)
         let tc = ThreadContext(name: "writer") {
             for _ in 1...90 {
                 latch.countDown()
@@ -94,7 +94,7 @@ class LatchTests :XCTestCase  {
     }
 
     public func testCountdownLatch2Exceed() throws {
-        let latch = try CountdownLatch2(100)
+        let latch = try CountdownLatch(100)
         let tc = ThreadContext(name: "writer") {
             for _ in 1...90 {
                 latch.countDown()
@@ -109,7 +109,7 @@ class LatchTests :XCTestCase  {
 
 
     public func testCountdownLatch2Timeout() throws  {
-        let latch = try CountdownLatch2(100)
+        let latch = try CountdownLatch(100)
 
         var t1 = timeval()
         gettimeofday(&t1, nil)

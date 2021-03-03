@@ -25,7 +25,7 @@ open class ReentrantLock: Lock {
 
     let maxThreads: Int
 
-    public init(maxThreads: Int) {
+    public init(_ maxThreads: Int) {
         self.maxThreads = maxThreads
         let firstNode = WaitQNode(status: ReentrantLock.UNLOCKED)
         let firstNodePtr = UnsafeMutablePointer<WaitQNode>.allocate(capacity: 1)

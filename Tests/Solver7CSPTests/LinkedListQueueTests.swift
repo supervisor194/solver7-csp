@@ -9,7 +9,7 @@ class LinkedListQueueTests: XCTestCase {
     func testManyWritersSingleReader() throws  {
 
 
-        let latch = try CountdownLatch(11) // 10 writers, 1 reader
+        let latch = try CountdownLatchViaChannel(11) // 10 writers, 1 reader
         let c = NonSelectableChannel(store: AnyStore( LinkedListQueue<String> (max: 10)))
 
         for i in 1...10 {

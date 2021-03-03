@@ -11,30 +11,15 @@ public class NonSelectableChannel<T>: Channel {
     let writeLock: Lock
     let readLock: Lock
 
-    private let _lockType: LockType
-
     var s: AnyStore<T>
 
-    public init(store: AnyStore<T>,  maxWriters: Int = 10, maxReaders: Int = 10, lockType: LockType = LockType.NON_FAIR_LOCK) {
+    public init(store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
         s = store
         capacity = store.max
         capacityMinus1 = capacity - 1
         capacityMinus2 = capacity - 2
-
-        _lockType = lockType
-
-        switch lockType {
-        case .FAIR_LOCK:
-            writeLock = FairLock(maxThreads: maxWriters)
-            readLock = FairLock(maxThreads: maxReaders)
-        default:
-            writeLock = NonFairLock(maxThreads: maxWriters)
-            readLock = NonFairLock(maxThreads: maxReaders)
-        }
-    }
-
-    public func getLockType() -> LockType {
-        return _lockType
+        self.writeLock = writeLock
+        self.readLock = readLock
     }
 
     public func write(_ item: T?) {

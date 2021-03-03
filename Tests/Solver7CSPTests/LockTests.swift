@@ -9,9 +9,9 @@ class LockTests: XCTestCase {
 
     func testOneThread() throws {
         var cnt = 0
-        let latch = try CountdownLatch(1)
-        let latch2 = try CountdownLatch(1)
-        let lock = NonFairLock(maxThreads: 2)
+        let latch = try CountdownLatchViaChannel(1)
+        let latch2 = try CountdownLatchViaChannel(1)
+        let lock = NonFairLock(2)
         var xyz = 99
         let myRunnable = { () -> Void in
             sleep(1)
@@ -65,9 +65,9 @@ class LockTests: XCTestCase {
 
     func testMultipleDoWaits() throws {
 
-        let latch = try CountdownLatch(20)
+        let latch = try CountdownLatchViaChannel(20)
 
-        let lock = NonFairLock(maxThreads: 20)
+        let lock = NonFairLock(20)
 
         for i in 1...20 {
             let tc = ThreadContext.init(name: "test:\(i)") {
@@ -97,9 +97,9 @@ class LockTests: XCTestCase {
 
         var xyz = 99
 
-        let latch = try CountdownLatch(99)
+        let latch = try CountdownLatchViaChannel(99, writeLock: NonFairLock(100), readLock: NonFairLock(1))
 
-        let lock = NonFairLock(maxThreads: 100)
+        let lock = NonFairLock(100)
 
         var tcs = [ThreadContext]()
 

@@ -21,7 +21,7 @@ class DiningPhilosophersTests  : XCTestCase {
         }
 
 
-        let wantToSleep = try CountdownLatch(5)
+        let wantToSleep = try CountdownLatchViaChannel(5)
 
         for i in 0...4 {
             let p = Philosopher(id: "Philosopher:\(i)", myChopstick: chopstick[i], otherChopstick: chopstick[(i+1)%5],
@@ -55,11 +55,11 @@ class Philosopher {
     let exitRequests: AnyChannel<String>
     let availableEnterTokens: AnyChannel<String>
 
-    let wantsToSleep: CountdownLatch
+    let wantsToSleep: CountdownLatchViaChannel
 
     init(id: String, myChopstick: AnyChannel<String>, otherChopstick: AnyChannel<String>,
          exitRequests: AnyChannel<String>, availableEnterTokens: AnyChannel<String>,
-         wantsToSleep: CountdownLatch) {
+         wantsToSleep: CountdownLatchViaChannel) {
         self.id = id
         self.myChopstick = myChopstick
         self.otherChopstick = otherChopstick

@@ -9,7 +9,7 @@ class NonSelectableChannelTests : XCTestCase {
 
         let svs = SingleValueStore<Int>()
         let s = AnyStore<Int>(svs)
-        let c = NonSelectableChannel<Int>(store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = NonSelectableChannel<Int>(store: s)
 
         var t1 = timeval()
         var t2 = timeval()
@@ -60,7 +60,7 @@ class NonSelectableChannelTests : XCTestCase {
     func testSingleValueStoreViaLLQ() {
         let q = LinkedListQueue<String>(max: 1)
         let s = AnyStore<String>(q)
-        let c = NonSelectableChannel<String>(store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = NonSelectableChannel<String>(store: s)
 
         var t1 = timeval()
         var t2 = timeval()
@@ -104,7 +104,7 @@ class NonSelectableChannelTests : XCTestCase {
     func testFoo() {
         let q = LinkedListQueue<MyInt64>(max: 100)
         let s = AnyStore<MyInt64>(q)
-        let c = NonSelectableChannel<MyInt64>(store: s, lockType: LockType.NON_FAIR_LOCK)
+        let c = NonSelectableChannel<MyInt64>(store: s)
 
         XCTAssertEqual(0, q.count)
         c.write(MyInt64(100))
@@ -126,12 +126,12 @@ class NonSelectableChannelTests : XCTestCase {
 
         let c = NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max:10)))
 
-        let l1 = try CountdownLatch(1)
+        let l1 = try CountdownLatchViaChannel(1)
         func dm() -> Void {
             l1.countDown()
         }
 
-        let l2 = try CountdownLatch(100)
+        let l2 = try CountdownLatchViaChannel(100)
         let r = { () -> Void in
             var cnt = 0
             repeat {

@@ -31,7 +31,7 @@ class PipelineTests: XCTestCase {
         var d0 = Duration()
         d0.start()
 
-        var l1 = try CountdownLatch(1)
+        var l1 = try CountdownLatchViaChannel(1)
         SillyTaskC.GL = l1
         var i = 0
         while i < 1000000 {
@@ -82,7 +82,7 @@ class PipelineTests: XCTestCase {
         var tc2c = ThreadContext(name: "tc2d", execute: r2)
         tc2c.start()
          */
-        let l2 = try CountdownLatch(1)
+        let l2 = try CountdownLatchViaChannel(1)
 
         let r3 = { ()->Void in
             var cnt = 0
@@ -223,7 +223,7 @@ class SillyTaskC : SillyTask  {
         }
     }
 
-    static var GL : CountdownLatch? = nil
+    static var GL : CountdownLatchViaChannel? = nil
 
     let msg:String
     static var _cnt = 0

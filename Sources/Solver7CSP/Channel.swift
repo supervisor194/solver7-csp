@@ -1,25 +1,10 @@
 import Foundation
 
-
-public enum LockType {
-    case FAIR_LOCK
-    case NON_FAIR_LOCK
-}
-
 public protocol Channel: ReadableChannel, WritableChannel {
-
-    func getLockType() -> LockType
-
 }
 
 public class AnyChannel<T>: Channel {
     public typealias Item = T // todo: remove ???
-
-    private let _getLockType: () -> LockType
-
-    public func getLockType() -> LockType {
-        _getLockType()
-    }
 
     private let _read: () -> T?
 
@@ -46,7 +31,6 @@ public class AnyChannel<T>: Channel {
     }
 
     public init<C: Channel>(_ c: C) where C.Item == T {
-        _getLockType = c.getLockType
         _read = c.read
         _readAvailable = c.read
         _numAvailable = c.numAvailable

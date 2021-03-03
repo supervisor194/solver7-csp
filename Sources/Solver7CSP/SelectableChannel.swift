@@ -7,9 +7,9 @@ public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable {
     private var _enableable: Bool = false
     private var _selector: Selector? = nil
 
-    public init(id: String, store: AnyStore<T>, maxWriters: Int = 10, maxReaders: Int = 10, lockType: LockType = LockType.NON_FAIR_LOCK) {
+    public init(id: String, store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
         self.id = id
-        super.init(store: store, maxWriters: maxWriters, maxReaders: maxReaders, lockType: lockType)
+        super.init(store: store, writeLock: writeLock, readLock: readLock)
     }
 
     public func getId() -> String {

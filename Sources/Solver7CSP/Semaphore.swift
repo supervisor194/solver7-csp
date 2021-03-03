@@ -6,12 +6,12 @@ public class Semaphore {
 
     let tokens: SelectableChannel<Int>
 
-    public init(_ n: Int, name: String = "sem", maxWriters: Int = 10, maxReaders: Int = 10) throws {
-        let q = LinkedListQueue<Int>(max: maxWriters + maxReaders)
+    public init(_ n: Int, name: String = "sem",
+                writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) throws {
+        let q = LinkedListQueue<Int>(max: n+1)
         let s = AnyStore(q)
         let semCnt = Semaphore.semCnt.loadThenWrappingIncrement(ordering: .relaxed)
-        tokens = SelectableChannel(id: "\(name):\(semCnt)", store: s,
-                maxWriters: maxWriters, maxReaders: maxReaders, lockType: LockType.NON_FAIR_LOCK)
+        tokens = SelectableChannel(id: "\(name):\(semCnt)", store: s, writeLock: writeLock, readLock: readLock)
         for _ in 1...n {
             tokens.write(1)
         }

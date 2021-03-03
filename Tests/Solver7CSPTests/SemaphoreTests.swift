@@ -8,8 +8,8 @@ class SemaphoreTests : XCTestCase {
     public func testBasic() throws {
         let N = 10
         var cnt = 0
-        let s = try Semaphore(1, maxWriters: 11, maxReaders: 11)
-        let latch = try CountdownLatch(N, maxWriters: 1, maxReaders: 1)
+        let s = try Semaphore(1, writeLock: NonFairLock(11), readLock: NonFairLock(11))
+        let latch = try CountdownLatchViaChannel(N, writeLock: NonFairLock(1), readLock: NonFairLock(1))
         s.take()
         for i in 1...10 {
             let tc = ThreadContext(name: "t\(i)") {
@@ -29,10 +29,10 @@ class SemaphoreTests : XCTestCase {
 
     public func testNPer() throws {
         var cnt = 0
-        let l0 = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
-        let l1 = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
-        let latch = try CountdownLatch(1, maxWriters: 1, maxReaders: 1)
-        let s = try Semaphore(100, maxWriters: 3, maxReaders: 3)
+        let l0 = try CountdownLatchViaChannel(1, writeLock: NonFairLock(1), readLock: NonFairLock(1))
+        let l1 = try CountdownLatchViaChannel(1, writeLock: NonFairLock(1), readLock: NonFairLock(1))
+        let latch = try CountdownLatchViaChannel(1, writeLock: NonFairLock(1), readLock: NonFairLock(1))
+        let s = try Semaphore(100, writeLock: NonFairLock(2), readLock: NonFairLock(2))
         s.take(90)
         let tc = ThreadContext(name: "t") {
             l0.await(TimeoutState.computeTimeoutTimespec(sec: 5))

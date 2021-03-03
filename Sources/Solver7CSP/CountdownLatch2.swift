@@ -1,7 +1,7 @@
 import Foundation
 import Atomics
 
-public class CountdownLatch {
+public class CountdownLatchViaChannel {
 
     private static let latchCnt = ManagedAtomic<Int>(0)
 
@@ -14,14 +14,13 @@ public class CountdownLatch {
 
     private var timedout = false
 
-    public init(_ n: Int, maxWriters: Int = 10, maxReaders: Int = 10) throws {
+    public init(_ n: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) throws {
         tokens = n
 
         let q = LinkedListQueue<Int>(max: 10)
         let s = AnyStore<Int>(q)
-        let latchCnt = CountdownLatch.latchCnt.loadThenWrappingIncrement(ordering: .relaxed)
-        c = SelectableChannel<Int>(id: "latch:\(latchCnt)", store: s,
-                maxWriters: maxWriters, maxReaders: maxReaders, lockType: LockType.NON_FAIR_LOCK)
+        let latchCnt = CountdownLatchViaChannel.latchCnt.loadThenWrappingIncrement(ordering: .relaxed)
+        c = SelectableChannel<Int>(id: "latch:\(latchCnt)", store: s, writeLock: writeLock, readLock: readLock)
         t = Timeout<String>(id: "latchTimeout:\(latchCnt)")
         var selectables = [Selectable]()
         selectables.append(c)
