@@ -45,7 +45,7 @@ class SelectableChannelTests : XCTestCase {
             }
         }
         let tc = ThreadContext(name: "howdy doody 1", execute: myRunnable)
-        tc.start()
+        XCTAssertEqual(0, tc.start())
 
         let myRunnable2 = { () -> Void in
             for i in 1...10 {
@@ -54,7 +54,7 @@ class SelectableChannelTests : XCTestCase {
             }
         }
         let tc2 = ThreadContext(name: "howdy doody 2", execute: myRunnable2)
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
 
         var cnt = 0
         repeat {
@@ -94,7 +94,7 @@ class SelectableChannelTests : XCTestCase {
             // print("done with writer")
         }
         let tc = ThreadContext(name: "writer1", execute: writer)
-        tc.start()
+        XCTAssertEqual(0, tc.start())
 
         var numInts = 0
 
@@ -118,7 +118,7 @@ class SelectableChannelTests : XCTestCase {
             // print("done with writer2")
         }
         let tc2 = ThreadContext( name: "writer2", execute: writer2)
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
 
         var done = false
 

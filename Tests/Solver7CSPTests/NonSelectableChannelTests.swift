@@ -35,8 +35,8 @@ class NonSelectableChannelTests : XCTestCase {
 
         XCTAssertTrue(s.isEmpty())
         XCTAssertFalse(s.isFull())
-        reader.start()
-        writer.start()
+        XCTAssertEqual(0, reader.start())
+        XCTAssertEqual(0, writer.start())
 
         sleep(1)
         XCTAssertEqual( StoreState.FULL, s.state)
@@ -87,8 +87,8 @@ class NonSelectableChannelTests : XCTestCase {
         }
         let reader = ThreadContext(name: "r1", execute: r1)
 
-        reader.start()
-        writer.start()
+        XCTAssertEqual(0, reader.start())
+        XCTAssertEqual(0, writer.start())
 
         while !done {
             sleep(1)
@@ -143,14 +143,14 @@ class NonSelectableChannelTests : XCTestCase {
             // print("done with r")
         }
         let reader = ThreadContext(name: "reader", destroyMe: dm, execute: r)
-        reader.start()
+        XCTAssertEqual(0, reader.start())
 
         let writer = ThreadContext(name: "writer") {
             for i in 1...100 {
                 c.write("howdy doody \(i)")
             }
         }
-        writer.start()
+        XCTAssertEqual(0, writer.start())
 
         l2.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
         XCTAssertEqual(0, l2.get())

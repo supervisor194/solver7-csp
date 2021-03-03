@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-import Solver7CSP
+@testable import Solver7CSP
 
 class BarrierTests : XCTestCase {
 
@@ -22,7 +22,7 @@ class BarrierTests : XCTestCase {
                 tokenReleaseChannel: tokenReleaseChannel)
 
         let mTC = ThreadContext(name: "BarrierManager", execute: manager.run)
-        mTC.start()
+        XCTAssertEqual(0, mTC.start())
 
         let latch = try CountdownLatchViaChannel(1)
         taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { ()->Void in

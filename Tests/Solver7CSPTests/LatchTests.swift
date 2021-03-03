@@ -27,11 +27,11 @@ class LatchTests :XCTestCase  {
         }
 
         let tc1 = ThreadContext(name: "r1", execute: r1)
-        tc1.start()
+        XCTAssertEqual(0, tc1.start())
         let tc2 = ThreadContext(name: "r2", execute: r2)
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
         let tc3 = ThreadContext(name: "r3", execute: r3)
-        tc3.start()
+        XCTAssertEqual(0, tc3.start())
 
         var t1 = timeval()
         gettimeofday(&t1, nil)
@@ -51,7 +51,7 @@ class LatchTests :XCTestCase  {
             latch.countDown(500)
         }
         let tc = ThreadContext(name: "r1", execute: r1)
-        tc.start()
+        XCTAssertEqual(0, tc.start())
 
         var t1 = timeval()
         gettimeofday(&t1, nil)
@@ -87,7 +87,7 @@ class LatchTests :XCTestCase  {
             latch.countDown(5)
             latch.countDown(5)
         }
-        tc.start()
+        XCTAssertEqual(0, tc.start())
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 3000)
         latch.await(&timeoutAt)
         XCTAssertEqual(0, latch.get())
@@ -101,7 +101,7 @@ class LatchTests :XCTestCase  {
             }
             latch.countDown(50)
         }
-        tc.start()
+        XCTAssertEqual(0, tc.start())
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 3000)
         latch.await(&timeoutAt)
         XCTAssertEqual(0, latch.get())

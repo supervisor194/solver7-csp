@@ -30,7 +30,10 @@ public class BarrierWorkerPool {
         for i in 1..._numWorkers {
             let w = BarrierWorker(taskQ: taskQ, tokenRequestWriter: tokenRequestWriter, tokenReleaseWriter: tokenReleaseWriter)
             let wTC = ThreadContext(name: "worker\(i)", execute: w.run)
-            wTC.start()
+            let status = wTC.start()
+            if status != 0 {
+                fatalError("Could not start worker: \(wTC.name), status == \(status)")
+            }
         }
     }
 

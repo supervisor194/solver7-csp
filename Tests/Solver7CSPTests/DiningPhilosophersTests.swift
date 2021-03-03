@@ -12,11 +12,11 @@ class DiningPhilosophersTests  : XCTestCase {
 
         let porter = Porter(exitRequests: exitRequests, availableEnterTokens: availableEnterTokens)
         let porterTC = ThreadContext(name: "porter", execute: porter.run)
-        porterTC.start()
+        XCTAssertEqual(0, porterTC.start())
 
         var chopstick : [AnyChannel<String>] = []
 
-        for i in 1...5 {
+        for _ in 1...5 {
             chopstick.append(AnyChannel(NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max: 2)))))
         }
 
@@ -28,7 +28,7 @@ class DiningPhilosophersTests  : XCTestCase {
                     exitRequests: exitRequests, availableEnterTokens: availableEnterTokens,
                     wantsToSleep: wantToSleep)
             let pTC = ThreadContext(name: p.getName(), execute: p.run)
-            pTC.start()
+            XCTAssertEqual(0, pTC.start())
         }
 
         for i in 0...4 {
@@ -113,7 +113,7 @@ class Philosopher {
     static var rng = SystemRandomNumberGenerator()
 
     static func _pause() {
-        var usec = UInt32(rng.next() % 1000 * 1000)
+        let usec = UInt32(rng.next() % 1000 * 1000)
         usleep(usec)
     }
 

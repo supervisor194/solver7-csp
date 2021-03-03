@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-import Solver7CSP
+@testable import Solver7CSP
 
 class ChannelExamplesTests : XCTestCase {
 

@@ -20,7 +20,7 @@ class SemaphoreTests : XCTestCase {
                 }
                 latch.countDown()
             }
-            tc.start()
+            XCTAssertEqual(0, tc.start())
         }
         s.release()
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
@@ -44,7 +44,7 @@ class SemaphoreTests : XCTestCase {
             s.release(100)
             l1.countDown()
         }
-        tc.start()
+        XCTAssertEqual(0, tc.start())
         let tc2 = ThreadContext(name: "t2") {
             l1.await(TimeoutState.computeTimeoutTimespec(sec: 5))
             s.take(100)
@@ -59,7 +59,7 @@ class SemaphoreTests : XCTestCase {
             s.take(100)
             latch.countDown()
         }
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
         l0.countDown()
         s.release(90)
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))

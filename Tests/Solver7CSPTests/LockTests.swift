@@ -37,7 +37,7 @@ class LockTests: XCTestCase {
         }
 
         let tc = ThreadContext( name: "howdy doody", destroyMe: dm, execute: myRunnable)
-        tc.start()
+        XCTAssertEqual(0, tc.start())
         XCTAssertEqual(-1, tc.start())
 
         lock.lock()
@@ -50,7 +50,7 @@ class LockTests: XCTestCase {
             lock.unlock()
             latch.countDown()
         }
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
 
 
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
@@ -77,7 +77,7 @@ class LockTests: XCTestCase {
                 // print("done with \(ThreadContext.currentContext().name)")
                 latch.countDown()
             }
-            tc.start()
+            XCTAssertEqual(0, tc.start())
         }
 
         sleep(2)
@@ -122,7 +122,7 @@ class LockTests: XCTestCase {
         }
 
         for tc in tcs {
-            tc.start()
+            XCTAssertEqual(0, tc.start())
         }
         lock.lock()
         while xyz != 0 {

@@ -19,7 +19,7 @@ class LinkedListQueueTests: XCTestCase {
                 }
                 latch.countDown()
             }
-            writer.start()
+            XCTAssertEqual(0, writer.start())
         }
 
         var cnt = 0
@@ -34,7 +34,7 @@ class LinkedListQueueTests: XCTestCase {
                     }
                 }
             }
-            reader.start()
+            XCTAssertEqual(0, reader.start())
         }
 
         latch.await(TimeoutState.computeTimeoutTimespec(millis: 3000))

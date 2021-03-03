@@ -5,8 +5,6 @@ import Foundation
 import Dispatch
 import Atomics
 
-
-
 class PipelineTests: XCTestCase {
 
     public func testDispatchQueues() throws {
@@ -31,7 +29,7 @@ class PipelineTests: XCTestCase {
         var d0 = Duration()
         d0.start()
 
-        var l1 = try CountdownLatchViaChannel(1)
+        let l1 = try CountdownLatchViaChannel(1)
         SillyTaskC.GL = l1
         var i = 0
         while i < 1000000 {
@@ -58,7 +56,7 @@ class PipelineTests: XCTestCase {
                 i+=1
             }
         }
-        tc0.start()
+        XCTAssertEqual(0, tc0.start())
 
         let r2 = { () -> Void in
             while true {
@@ -73,7 +71,7 @@ class PipelineTests: XCTestCase {
             }
         }
         let tc2 = ThreadContext(name: "tc2a", execute: r2)
-        tc2.start()
+        XCTAssertEqual(0, tc2.start())
         /*
         var tc2a = ThreadContext(name: "tc2b", execute: r2)
         tc2a.start()
@@ -95,7 +93,7 @@ class PipelineTests: XCTestCase {
             l2.countDown()
         }
         let tc3 = ThreadContext(name: "tc3", execute: r3)
-        tc3.start()
+        XCTAssertEqual(0, tc3.start())
         l2.await(TimeoutState.computeTimeoutTimespec(sec: 60, nanos: 0))
         d.stop()
         print("duration: \(d.milliseconds)")
