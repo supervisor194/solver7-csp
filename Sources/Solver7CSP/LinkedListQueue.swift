@@ -1,6 +1,10 @@
 import Foundation
 import Atomics
 
+/**
+ Note: this non-blocking queue is not thread safe.  Channel with read/write locks and count management
+ need to surround the usage of this class to make it thread safe.
+ */
 public class LinkedListQueue<T: Equatable>: QueueStore {
 
     private var _cnt = ManagedAtomic<Int>(0)
@@ -28,18 +32,14 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
 
     public func put(_ item: T?) -> Int {
         enqueue(value: item)
-        return _cnt.wrappingIncrementThenLoad(ordering: .relaxed)
     }
 
     public func putForNode(_ item: T?) -> (Int, U: StoreNode) {
-        let newNode = enqueueForNode(value: item)
-        return (_cnt.wrappingIncrementThenLoad(ordering: .relaxed), newNode)
+        enqueueForNode(value: item)
     }
 
     public func get() -> T? {
-        let value = dequeue()
-        _cnt.wrappingDecrement(ordering: .relaxed)
-        return value
+        dequeue()
     }
 
     public func get(into: inout [T?], upTo: Int) -> (Int, Int) {
@@ -53,15 +53,6 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         return (c, count)
     }
 
-    public func getWithCount() -> (T?, Int) {
-        if _cnt.load(ordering: .relaxed) > 0 {
-            let value = dequeue()
-            return (value, _cnt.wrappingDecrementThenLoad(ordering: .relaxed))
-        } else {
-            return (nil, -1)
-        }
-    }
-
     public func take() -> T? {
         get()
     }
@@ -69,7 +60,6 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
     public func remove(_ node: QStoreNode<T>) -> Bool {
         return false
     }
-
 
     public func remove(_ item: T?) -> Bool {
         var p: QStoreNode = head
@@ -122,17 +112,18 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
 
     /////
 
-    func enqueue(value: T?) {
+    func enqueue(value: T?) -> Int {
         let newNode = QStoreNode(value)
         tail.next = newNode
         tail = newNode
+        return _cnt.wrappingIncrementThenLoad(ordering: .relaxed)
     }
 
-    func enqueueForNode(value: T?) -> QStoreNode<T> {
+    func enqueueForNode(value: T?) -> (Int, U: StoreNode) {
         let newNode = QStoreNode(value)
         tail.next = newNode
         tail = newNode
-        return newNode
+        return (_cnt.wrappingIncrementThenLoad(ordering: .relaxed), newNode)
     }
 
     func dequeue() -> T? {
@@ -142,6 +133,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         head = newHead
         let value = newHead.value
         newHead.value = nil
+        _cnt.wrappingDecrement(ordering: .relaxed)
         return value
     }
 

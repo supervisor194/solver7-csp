@@ -29,8 +29,6 @@ public protocol Store: class {
 
     func get(into: inout [Item?], upTo: Int) -> (Int, Int)
 
-    func getWithCount() -> (Item?, Int)
-
     func clear() -> Int
 
     func remove(_ item: Item?) -> Bool
@@ -115,12 +113,6 @@ public class AnyStore<T>: Store {
         _getAvailableUpTo(&into, upTo)
     }
 
-    private let _getWithCount: () -> (T?, Int)
-
-    public func getWithCount() -> (T?, Int) {
-        _getWithCount()
-    }
-
     private let _clear: () -> Int
 
     public func clear() -> Int {
@@ -143,7 +135,6 @@ public class AnyStore<T>: Store {
         _putForNode = s.putForNode
         _get = s.get
         _getAvailableUpTo = s.get
-        _getWithCount = s.getWithCount
         _clear = s.clear
         _remove = s.remove
     }

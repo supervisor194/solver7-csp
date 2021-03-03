@@ -9,10 +9,6 @@ public class SingleValueStore<T: Equatable>: Store {
         fatalError("putForNode(_:) has not been implemented")
     }
 
-    public func getWithCount() -> (T?, Int) {
-        fatalError("getWithCount() has not been implemented")
-    }
-
     var value: T?
 
     public init() {

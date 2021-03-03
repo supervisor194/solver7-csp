@@ -57,13 +57,6 @@ public class NonSelectableChannel<T>: Channel {
             }
             o = s.get()
             c = s.count
-            /*
-            (o, scnt) = s.getWithCount()
-            while scnt == -1 {
-                readLock.doWait()
-                (o, scnt) = s.getWithCount()
-            }
-             */
             if c > 0 {
                 readLock.doNotify()
             }
