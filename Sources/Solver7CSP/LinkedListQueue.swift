@@ -7,10 +7,10 @@ import Atomics
  */
 public class LinkedListQueue<T: Equatable>: QueueStore {
 
-    private var _cnt = ManagedAtomic<Int>(0)
+    private var _count = ManagedAtomic<Int>(0)
 
     public var count: Int {
-        _cnt.load(ordering: .acquiring)
+        _count.load(ordering: .acquiring)
     }
 
     private let _max: Int
@@ -71,7 +71,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
                 if (n?.next == nil) {
                     tail = p
                 }
-                _cnt.wrappingDecrement(ordering: .relaxed)
+                _count.wrappingDecrement(ordering: .relaxed)
                 return true
             }
             p = n!
@@ -82,16 +82,16 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
 
     public func clear() -> Int {
         var num: Int = 0
-        while _cnt.loadThenWrappingDecrement(ordering: .relaxed) > 0 {
+        while _count.loadThenWrappingDecrement(ordering: .relaxed) > 0 {
             dequeue()
             num += 1
         }
-        _cnt.store(0, ordering: .relaxed)
+        _count.store(0, ordering: .relaxed)
         return num
     }
 
     public var state: StoreState {
-        let size = _cnt.load(ordering: .relaxed)
+        let size = _count.load(ordering: .relaxed)
         if (size > 0) {
             if (size != _max) {
                 return StoreState.NONEMPTY
@@ -102,11 +102,11 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
     }
 
     public func isFull() -> Bool {
-        _max == _cnt.load(ordering: .relaxed)
+        _max == _count.load(ordering: .relaxed)
     }
 
     public func isEmpty() -> Bool {
-        0 == _cnt.load(ordering: .relaxed)
+        0 == _count.load(ordering: .relaxed)
     }
 
 
@@ -116,14 +116,14 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         let newNode = QStoreNode(value)
         tail.next = newNode
         tail = newNode
-        return _cnt.wrappingIncrementThenLoad(ordering: .relaxed)
+        return _count.wrappingIncrementThenLoad(ordering: .relaxed)
     }
 
     func enqueueForNode(value: T?) -> (Int, U: StoreNode) {
         let newNode = QStoreNode(value)
         tail.next = newNode
         tail = newNode
-        return (_cnt.wrappingIncrementThenLoad(ordering: .relaxed), newNode)
+        return (_count.wrappingIncrementThenLoad(ordering: .relaxed), newNode)
     }
 
     func dequeue() -> T? {
@@ -133,7 +133,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         head = newHead
         let value = newHead.value
         newHead.value = nil
-        _cnt.wrappingDecrement(ordering: .relaxed)
+        _count.wrappingDecrement(ordering: .relaxed)
         return value
     }
 

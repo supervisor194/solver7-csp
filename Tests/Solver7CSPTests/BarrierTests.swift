@@ -24,7 +24,7 @@ class BarrierTests : XCTestCase {
         let mTC = ThreadContext(name: "BarrierManager", execute: manager.run)
         XCTAssertEqual(0, mTC.start())
 
-        let latch = try CountdownLatchViaChannel(1)
+        let latch = try CountdownLatch2(1)
         taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { ()->Void in
             print("hello there, i'm task 1")
             latch.countDown()
@@ -35,8 +35,8 @@ class BarrierTests : XCTestCase {
 
         var val = 0
 
-        let latch2 = try CountdownLatchViaChannel(1)
-        let latch3 = try CountdownLatchViaChannel(1)
+        let latch2 = try CountdownLatch2(1)
+        let latch3 = try CountdownLatch2(1)
 
         taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { ()->Void in
             print("i'm a delaying task")

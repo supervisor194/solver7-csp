@@ -1,7 +1,11 @@
 import Foundation
 import Atomics
 
-public class CountdownLatchViaChannel {
+/**
+ This CountdownLatch2 requires that one call await() in order to get a valid signal.  One can the check the get()
+ for the number of tokens at the moment after an await()
+ */
+public class CountdownLatch2 {
 
     private static let latchCnt = ManagedAtomic<Int>(0)
 
@@ -19,7 +23,7 @@ public class CountdownLatchViaChannel {
 
         let q = LinkedListQueue<Int>(max: 10)
         let s = AnyStore<Int>(q)
-        let latchCnt = CountdownLatchViaChannel.latchCnt.loadThenWrappingIncrement(ordering: .relaxed)
+        let latchCnt = CountdownLatch2.latchCnt.loadThenWrappingIncrement(ordering: .relaxed)
         c = SelectableChannel<Int>(id: "latch:\(latchCnt)", store: s, writeLock: writeLock, readLock: readLock)
         t = Timeout<String>(id: "latchTimeout:\(latchCnt)")
         var selectables = [Selectable]()
@@ -42,6 +46,10 @@ public class CountdownLatchViaChannel {
     }
 
     public func await(_ timeoutTime: timespec) {
+        if tokens == 0 {
+            return
+        }
+
         t.setTimeout(timeoutTime)
 
         while true {

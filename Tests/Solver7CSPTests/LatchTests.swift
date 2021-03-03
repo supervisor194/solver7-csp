@@ -6,7 +6,7 @@ import Foundation
 class LatchTests :XCTestCase  {
 
     public func testManyThreadsTo0() throws {
-        let latch = try CountdownLatchViaChannel(1000)
+        let latch = try CountdownLatch2(1000)
 
         let r1 = { () -> Void in
             for _ in 1...100 {
@@ -44,7 +44,7 @@ class LatchTests :XCTestCase  {
     }
 
     public func testOneBigDecrementBeyond0() throws {
-        let latch = try CountdownLatchViaChannel(100)
+        let latch = try CountdownLatch2(100)
 
         let r1 = { () -> Void in
             sleep(1)
@@ -65,7 +65,7 @@ class LatchTests :XCTestCase  {
 
 
     public func testTimeout() throws {
-        let latch = try CountdownLatchViaChannel(100)
+        let latch = try CountdownLatch2(100)
 
         var t1 = timeval()
         gettimeofday(&t1, nil)

@@ -1,4 +1,5 @@
 import Foundation
+import Atomics
 
 public class SingleValueStore<T: Equatable>: Store {
     public func get(into: inout [T?], upTo: Int) -> (Int, Int) {
@@ -20,57 +21,53 @@ public class SingleValueStore<T: Equatable>: Store {
         }
     }
 
+    private var _count = ManagedAtomic<Int>(0)
+
     public var count: Int {
         get {
-            value != nil ? 1 : 0
-        }
-    }
-
-    var count2: Int {
-        get {
-            value != nil ? 1 : 0
+            _count.load(ordering: .relaxed)
         }
     }
 
     public func put(_ o: T?) -> Int {
         value = o
-        return 1
+        return _count.wrappingIncrementThenLoad(ordering: .relaxed)
     }
 
     public func get() -> T? {
         let o = value
         value = nil
+        _count.wrappingDecrement(ordering: .relaxed)
         return o
     }
 
     public var state: StoreState {
         get {
-            value != nil ? StoreState.FULL : StoreState.EMPTY
+            _count.load(ordering: .relaxed) == 0 ? StoreState.EMPTY: StoreState.FULL
         }
     }
 
     public func isFull() -> Bool {
-        value != nil
+        _count.load(ordering: .relaxed) != 0
     }
 
     public func isEmpty() -> Bool {
-        value == nil
+        _count.load(ordering: .relaxed) == 0
     }
 
     public func clear() -> Int {
-        if value == nil {
-            return 0
+        if _count.compareExchange(expected: 1, desired: 0, ordering: .relaxed).exchanged {
+            value = nil
+            return 1
         }
-        value = nil
-        return 1
+        return 0
     }
 
     public func remove(_ item: T?) -> Bool {
-        if let i = item {
-            if i == value {
-                value = nil
-                return true
-            }
+        if item == value && _count.load(ordering: .relaxed) != 0 {
+            value = nil
+            _count.store(0, ordering: .relaxed)
+            return true
         }
         return false
     }

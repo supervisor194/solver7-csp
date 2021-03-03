@@ -126,12 +126,12 @@ class NonSelectableChannelTests : XCTestCase {
 
         let c = NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max:10)))
 
-        let l1 = try CountdownLatchViaChannel(1)
+        let l1 = try CountdownLatch2(1)
         func dm() -> Void {
             l1.countDown()
         }
 
-        let l2 = try CountdownLatchViaChannel(100)
+        let l2 = try CountdownLatch2(100)
         let r = { () -> Void in
             var cnt = 0
             repeat {
@@ -157,6 +157,29 @@ class NonSelectableChannelTests : XCTestCase {
 
         l1.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
         XCTAssertEqual(0, l1.get())
+    }
+
+
+    public func testManyWritersManyReaders() throws {
+
+        // 10 writers --> 10 channels --> 5 readers -- 2 channels --> 10 readers --> 1 channel --> sum
+
+        var level1Channels : [AnyChannel<Int>] = []
+        for i in 1...10 {
+            level1Channels.append(ChannelFactory.Default.SLLQ(id: "level1:\(i))", max: 100).create(t: Int.self))
+        }
+        level1Channels.append(ChannelFactory.Default.SVS().create(t: Int.self))
+
+        var rng = SystemRandomNumberGenerator()
+
+        for i in 1...10 {
+            let writer = ThreadContext(name: "initiator:\(i)") {
+                let ch = Int(rng.next()%10)
+                level1Channels[ch].write(Int(rng.next()%1000000))
+            }
+        }
+
+
     }
 
     static var allTests = [

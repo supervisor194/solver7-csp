@@ -17,15 +17,29 @@ public class CountdownLatch {
         defer {
             l.unlock()
         }
-        l.doWait(&timeoutTime)
+        while n.load(ordering: .relaxed) != 0 {
+            l.doWait(&timeoutTime)
+        }
     }
 
     public func countDown() -> Void {
-        n.wrappingDecrement(by: 1, ordering: .relaxed)
+        if n.wrappingDecrementThenLoad(ordering: .relaxed) <= 0 {
+            l.lock()
+            defer {
+                l.unlock()
+            }
+            l.doNotify()
+        }
     }
 
     public func countDown(_ by: Int) ->Void {
-        n.wrappingDecrement(by: by, ordering: .relaxed)
+        if n.wrappingDecrementThenLoad(by: by, ordering: .relaxed) <= 0 {
+            l.lock()
+            defer {
+                l.unlock()
+            }
+            l.doNotify()
+        }
     }
 
     public func get() -> Int {

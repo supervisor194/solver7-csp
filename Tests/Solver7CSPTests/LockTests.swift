@@ -9,8 +9,8 @@ class LockTests: XCTestCase {
 
     func testOneThread() throws {
         var cnt = 0
-        let latch = try CountdownLatchViaChannel(1)
-        let latch2 = try CountdownLatchViaChannel(1)
+        let latch = try CountdownLatch2(1)
+        let latch2 = try CountdownLatch2(1)
         let lock = NonFairLock(2)
         var xyz = 99
         let myRunnable = { () -> Void in
@@ -65,7 +65,7 @@ class LockTests: XCTestCase {
 
     func testMultipleDoWaits() throws {
 
-        let latch = try CountdownLatchViaChannel(20)
+        let latch = try CountdownLatch2(20)
 
         let lock = NonFairLock(20)
 
@@ -97,7 +97,7 @@ class LockTests: XCTestCase {
 
         var xyz = 99
 
-        let latch = try CountdownLatchViaChannel(99, writeLock: NonFairLock(100), readLock: NonFairLock(1))
+        let latch = try CountdownLatch2(99, writeLock: NonFairLock(100), readLock: NonFairLock(1))
 
         let lock = NonFairLock(100)
 
