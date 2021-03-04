@@ -7,6 +7,114 @@ import Atomics
 
 class PipelineTests: XCTestCase {
 
+    public func testManyWritersManyReaders() throws {
+        // W writers for N*W msgs --> 2*W channels --> W selectable readers/writers -->
+        //     2 channels --> 2 readers/writers --> 1 channel --> 1 reader --> cnt == N*W
+
+        let N = 5
+        let W = 10
+        let UW2 = UInt64(W*2)
+        let l1 = CountdownLatch(W)
+        var level1Channels : [SelectableChannel<Int>] = []
+        for i in 1...W {
+            level1Channels.append(ChannelFactory.AsSelectable.SLLQ(id: "level1:\(i)", max: 100,
+                    writeLock: NonFairLock(2*W), readLock: NonFairLock(1)).create(t: Int.self))
+            level1Channels.append(ChannelFactory.AsSelectable.SSVS(id: "level1b:\(i)",
+                    writeLock: NonFairLock(2*W), readLock: NonFairLock(1)).create(t: Int.self))
+        }
+        var rng = SystemRandomNumberGenerator()
+        for i in 1...W {
+            let writer = ThreadContext(name: "initiator:\(i)") {
+                var x = 1
+                while x <= N {
+                    let ch = Int(rng.next() % UW2)
+                    level1Channels[ch].write(x)
+                    x+=1
+                }
+                l1.countDown()
+            }
+            writer.start()
+        }
+
+        let io1 = ChannelFactory.AsAny.LLQ(max: 10, writeLock: NonFairLock(W), readLock: NonFairLock(1)).create(t: Int.self)
+        let io2 = ChannelFactory.AsAny.LLQ(max: 10, writeLock: NonFairLock(W), readLock: NonFairLock(1)).create(t: Int.self)
+
+        for i in 1...W {
+            let reader = ThreadContext(name: "R1:\(i)") {
+                var selectables: [Selectable] = []
+                let ch1 = level1Channels[(i-1)*2]
+                let ch2 = level1Channels[(i-1)*2+1]
+                ch1.setHandler() {
+                    io1.write(ch1.read())
+                }
+                ch2.setHandler() {
+                    io2.write(ch2.read())
+                }
+                selectables.append(ch1)
+                selectables.append(ch2)
+
+                let selector: Solver7CSP.Selector
+                do {
+                    selector = try FairSelector(selectables)
+                } catch {
+                    XCTFail("problems with selector")
+                    return
+                }
+                while true {
+                    let s = selector.select()
+                    s.handle()
+                }
+            }
+            reader.start()
+        }
+
+        let output = ChannelFactory.AsAny.SVS().create(t: Int.self)
+        let io1Reader = ThreadContext(name: "IO1Reader") {
+            while true {
+                let val = io1.read()
+                output.write(val)
+            }
+        }
+        io1Reader.start()
+
+        let io2Reader = ThreadContext(name: "IO1Reader") {
+            while true {
+                let val = io2.read()
+                output.write(val)
+            }
+        }
+        io2Reader.start()
+
+        let l2 = CountdownLatch(1)
+        var cnt = 0
+        let outputReader = ThreadContext(name: "OutputReader") {
+            while cnt < N*W {
+                let val = output.read()!
+                cnt += 1
+            }
+            l2.countDown()
+        }
+        outputReader.start()
+
+
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        l1.await(&timeoutAt)
+        XCTAssertEqual(0, l1.get())
+
+        timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        l2.await(&timeoutAt)
+        XCTAssertEqual(0, l2.get())
+        XCTAssertEqual(N*W, cnt)
+
+        for i in 0...level1Channels.count-1 {
+            XCTAssertEqual(0, level1Channels[i].numAvailable())
+        }
+        XCTAssertEqual(0, io1.numAvailable())
+        XCTAssertEqual(0, io2.numAvailable())
+        XCTAssertEqual(0, output.numAvailable())
+    }
+
+
     public func testDispatchQueues() throws {
 
         let dqA = DispatchQueue(label: "A", attributes: .concurrent)

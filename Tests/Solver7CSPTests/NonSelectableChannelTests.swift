@@ -136,11 +136,9 @@ class NonSelectableChannelTests : XCTestCase {
             var cnt = 0
             repeat {
                 let x = c.read()
-                // print("read: \(x)")
                 cnt += 1
                 l2.countDown()
             } while cnt<100
-            // print("done with r")
         }
         let reader = ThreadContext(name: "reader", destroyMe: dm, execute: r)
         XCTAssertEqual(0, reader.start())
@@ -160,31 +158,25 @@ class NonSelectableChannelTests : XCTestCase {
     }
 
 
-    public func testManyWritersManyReaders() throws {
-
-        // 10 writers --> 10 channels --> 5 readers -- 2 channels --> 10 readers --> 1 channel --> sum
-
-        var level1Channels : [AnyChannel<Int>] = []
-        for i in 1...10 {
-            level1Channels.append(ChannelFactory.Default.SLLQ(id: "level1:\(i))", max: 100).create(t: Int.self))
-        }
-        level1Channels.append(ChannelFactory.Default.SVS().create(t: Int.self))
-
-        var rng = SystemRandomNumberGenerator()
-
-        for i in 1...10 {
-            let writer = ThreadContext(name: "initiator:\(i)") {
-                let ch = Int(rng.next()%10)
-                level1Channels[ch].write(Int(rng.next()%1000000))
-            }
-        }
-
-
-    }
-
     static var allTests = [
         ("testFoo", testFoo),
         ("testFull", testFull),
         ("testSingleValueStoreViaLLQ", testSingleValueStoreViaLLQ),
+        ("testSingleValueStore", testSingleValueStore),
     ]
 }
+
+
+
+/*
+
+
+   Channel                                   Selectable
+
+       ----> NonSelectableChannel
+                                              <---
+                 --> SelectableChannel is! Selectable
+
+
+                  AnyChannel    isSelectable
+ */

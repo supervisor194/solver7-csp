@@ -5,16 +5,21 @@ public protocol ChannelCreator {
     func create<T: Equatable>(t: T.Type) -> AnyChannel<T>
 }
 
+public protocol SelectableChannelCreator {
+    func create<T: Equatable>(t: T.Type) -> SelectableChannel<T>
+}
+
 
 public enum ChannelFactory {
 }
 
 public extension ChannelFactory {
 
-    enum Default: ChannelCreator {
+    enum AsAny: ChannelCreator {
         case LLQ(max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
         case SVS(writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
-        case SLLQ(id: String, max: Int)
+        case SLLQ(id: String, max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
+        case SSVS(id: String, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
 
         public func create<T: Equatable>(t: T.Type) -> AnyChannel<T> {
             switch self {
@@ -24,8 +29,28 @@ public extension ChannelFactory {
             case let .SVS(writeLock, readLock):
                 return AnyChannel(NonSelectableChannel(store: AnyStore(SingleValueStore<T>()),
                         writeLock: writeLock, readLock: readLock))
-            case let .SLLQ(id, max):
-                return AnyChannel(SelectableChannel(id: id, store: AnyStore(LinkedListQueue<T>(max: max))))
+            case let .SLLQ(id, max, writeLock, readLock):
+                return AnyChannel(SelectableChannel(id: id, store: AnyStore(LinkedListQueue<T>(max: max)),
+                        writeLock: writeLock, readLock: readLock))
+            case let .SSVS(id, writeLock, readLock):
+                return AnyChannel(SelectableChannel(id: id, store: AnyStore(SingleValueStore<T>()),
+                        writeLock: writeLock, readLock: readLock))
+            }
+        }
+    }
+
+    enum AsSelectable: SelectableChannelCreator {
+        case SLLQ(id: String, max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
+        case SSVS(id: String, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
+
+        public func create<T: Equatable>(t: T.Type) -> SelectableChannel<T> {
+            switch self {
+            case let .SLLQ(id, max, writeLock, readLock):
+                return SelectableChannel(id: id, store: AnyStore(LinkedListQueue<T>(max: max)),
+                        writeLock: writeLock, readLock: readLock)
+            case let .SSVS(id, writeLock, readLock):
+                return SelectableChannel(id: id, store: AnyStore(SingleValueStore<T>()),
+                        writeLock: writeLock, readLock: readLock)
             }
         }
     }

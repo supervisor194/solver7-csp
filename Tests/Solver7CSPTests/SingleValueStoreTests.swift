@@ -13,7 +13,7 @@ class SingleValueStoreTests : XCTestCase {
         let W = 13
         let R = 15
 
-        let ch = ChannelFactory.Default.SVS(writeLock: NonFairLock(W), readLock: NonFairLock(R)).create(t: Int.self)
+        let ch = ChannelFactory.AsAny.SVS(writeLock: NonFairLock(W), readLock: NonFairLock(R)).create(t: Int.self)
         for i in 1...W {
             let w = ThreadContext(name: "writer:\(i)") {
                 var x = 1
@@ -25,7 +25,7 @@ class SingleValueStoreTests : XCTestCase {
             w.start()
         }
 
-        let ch2 = ChannelFactory.Default.SVS(writeLock: NonFairLock(R), readLock: NonFairLock(1)).create(t: Int.self)
+        let ch2 = ChannelFactory.AsAny.SVS(writeLock: NonFairLock(R), readLock: NonFairLock(1)).create(t: Int.self)
         for i in 1...R {
             let r = ThreadContext(name: "reader:\(i)") {
                 while true {

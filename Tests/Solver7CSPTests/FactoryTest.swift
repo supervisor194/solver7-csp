@@ -26,9 +26,9 @@ class FactoryTest: XCTestCase {
 
     public func testOne() throws {
 
-        let x = ChannelFactory.Default.LLQ(max: 10).create(t: String.self)
-        let sx = ChannelFactory.Default.SLLQ(id: "MySelectableChannel", max: 10).create(t: String.self)
-        let y = ChannelFactory.Default.SVS().create(t: String.self)
+        let x = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
+        let sx = ChannelFactory.AsAny.SLLQ(id: "MySelectableChannel", max: 10).create(t: String.self)
+        let y = ChannelFactory.AsAny.SVS().create(t: String.self)
 
         let zz = ChannelFactory.Mine.NSLLQ100.create(t: Int.self)
         let z2 = ChannelFactory.Mine.NSRWLLQ100.create(t: Int.self)

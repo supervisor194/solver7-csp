@@ -73,7 +73,7 @@ public class Timeout<T>: Selectable {
         return id
     }
 
-    public func setHandler(_ handler: (() -> Void)?) -> Void {
+    public func setHandler(_ handler: @escaping () -> Void) -> Void {
         self.handler = handler
     }
 

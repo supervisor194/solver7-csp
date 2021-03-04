@@ -10,6 +10,8 @@ public protocol Selectable {
 
     func hasData() -> Bool
 
+    func setHandler(_ handler: @escaping () -> Void) -> Void
+
     func handle() -> Void
 
     func setSelector(_ selector: Selector?) -> Void
