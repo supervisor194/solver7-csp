@@ -30,7 +30,25 @@ public class AnyChannel<T>: Channel {
         _write(item)
     }
 
+    private let _isSelectable: Bool
+
+    public func isSelectable() -> Bool {
+        _isSelectable
+    }
+
+    private let _selectable: SelectableChannel<T>?
+
+    public var selectable: SelectableChannel<T>? { get {
+        _selectable
+    }}
+
     public init<C: Channel>(_ c: C) where C.Item == T {
+        _isSelectable = c is Selectable
+        if _isSelectable {
+            _selectable = c as! SelectableChannel<T>
+        } else {
+            _selectable = nil
+        }
         _read = c.read
         _readAvailable = c.read
         _numAvailable = c.numAvailable

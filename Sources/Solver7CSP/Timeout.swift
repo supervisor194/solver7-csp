@@ -70,7 +70,7 @@ public class Timeout<T>: Selectable {
     }
 
     public func getId() -> String {
-        return id
+        id
     }
 
     public func setHandler(_ handler: @escaping () -> Void) -> Void {
