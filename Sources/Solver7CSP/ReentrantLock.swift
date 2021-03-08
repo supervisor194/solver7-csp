@@ -14,6 +14,7 @@ open class ReentrantLock: Lock {
 
     internal var lockingTc: ThreadContext? = nil
     internal let state = ManagedAtomic<Int>(0)
+    var depth = 0
 
     // Build a non locking queue with tail and head.
     // The tail is managed via a pointer to a Node to enable atomic modifications
@@ -82,12 +83,15 @@ open class ReentrantLock: Lock {
         if ThreadContext.currentContext() !== lockingTc {
             fatalError("can't unlock(), we don't own the lock!!!")
         }
-        lockingTc = nil
-        state.store(ReentrantLock.UNLOCKED, ordering: .relaxed)
-        let waitQHead = waitQHeadPtr.load(ordering: .relaxed).pointee
-        if let tc = waitQHead._tc {
-            if waitQHead.compareAndSetStatus(expectedStatus: ReentrantLock.WAITER_NEED_SIGNAL, desiredStatus: ReentrantLock.WAITER_INITIAL) {
-                tc.up()
+        depth -= 1
+        if depth == 0 {
+            lockingTc = nil
+            state.store(ReentrantLock.UNLOCKED, ordering: .relaxed)
+            let waitQHead = waitQHeadPtr.load(ordering: .relaxed).pointee
+            if let tc = waitQHead._tc {
+                if waitQHead.compareAndSetStatus(expectedStatus: ReentrantLock.WAITER_NEED_SIGNAL, desiredStatus: ReentrantLock.WAITER_INITIAL) {
+                    tc.up()
+                }
             }
         }
     }
@@ -114,7 +118,16 @@ open class ReentrantLock: Lock {
         waiterPool.put(waiter)
     }
 
-    // must have the lock
+    /*
+
+      condition.doWait()
+          gets a waiter = waiterPool.get()
+            sets waiter.depth = lock.depth
+          waiterQ.add(waiter)
+          condition.waiter = waiter
+
+
+      */
     public func doWait(_ timeoutAt: inout timespec) -> Void {
         let waiter = waiterPool.get()!
         waiter._tc = ThreadContext.currentContext()
@@ -151,6 +164,79 @@ open class ReentrantLock: Lock {
     public func reUp() -> Void {
         if let ltc = lockingTc {
             ltc.up()
+        }
+    }
+
+    public func createCondition() -> Condition {
+        Condition(self)
+    }
+
+}
+
+public class Condition {
+    let lock: Lock
+
+    private let waiterQ: LinkedListQueue<TCNode>
+    // private let waiterPool: LinkedListQueue<TCNode>
+
+    init(_ lock: Lock) {
+        self.lock = lock
+        waiterQ = LinkedListQueue<TCNode>(max: 10) // todo: fix hardcoding
+    }
+
+    public func doWait() -> Void {
+        // a - let waiter = waiterPool.get()!
+        let waiter = TCNode(status: ReentrantLock.WAITER_INITIAL)
+        waiter._tc = ThreadContext.currentContext()
+        // a - waiter.setStatus(status: ReentrantLock.WAITER_INITIAL)
+        waiterQ.put(waiter)
+        lock.unlock()
+        if waiter.compareAndSetStatus(expectedStatus: ReentrantLock.WAITER_INITIAL, desiredStatus: ReentrantLock.WAITER_NEED_SIGNAL) {
+            while waiter.getStatus() == ReentrantLock.WAITER_NEED_SIGNAL {
+                waiter._tc!.down()
+            }
+        }
+        lock.lock()
+        waiter._tc = nil
+        if waiter.getStatus() != ReentrantLock.WAITER_SIGNALED {
+            print("not signalled...")
+            if waiterQ.remove(waiter) {
+                print("removed waiter leaving doWait()")
+            }
+        }
+        // a - waiterPool.put(waiter)
+    }
+
+    public func doWait(_ timeoutAt: inout timespec) -> Void {
+        // a - let waiter = waiterPool.get()!
+        let waiter = TCNode(status: ReentrantLock.WAITER_INITIAL)
+        waiter._tc = ThreadContext.currentContext()
+        // a - waiter.setStatus(status: ReentrantLock.WAITER_INITIAL)
+        waiterQ.put(waiter)
+        // releasing the lock
+        lock.unlock()
+        if waiter.compareAndSetStatus(expectedStatus: ReentrantLock.WAITER_INITIAL, desiredStatus: ReentrantLock.WAITER_NEED_SIGNAL) {
+            while waiter.exchangeStatus(status: ReentrantLock.WAITER_NEED_SIGNAL) == ReentrantLock.WAITER_NEED_SIGNAL
+                          && !TimeoutState.expired(timeoutAt) {
+                waiter._tc?.down(&timeoutAt)
+            }
+        }
+        lock.lock()
+        // we now have the lock again
+        waiter._tc = nil
+        if waiter.getStatus() != ReentrantLock.WAITER_SIGNALED {
+            waiterQ.remove(waiter)
+        }
+        // a - waiterPool.put(waiter)
+    }
+
+    public func doNotify() {
+        if !waiterQ.isEmpty() {
+            let head = waiterQ.get()!
+            if head.exchangeStatus(status: ReentrantLock.WAITER_SIGNALED) == ReentrantLock.WAITER_NEED_SIGNAL {
+                // print("w: \(Unmanaged.passUnretained(head).toOpaque()) up: \(head._tc!.name)")
+                head._tc?.up()
+            }
         }
     }
 
@@ -196,3 +282,27 @@ class WaitQNode: TCNode {
     var _nextPtr: NodePtr? = nil
 
 }
+
+
+
+/*
+
+
+T1     lock     lock     lock.await     unlock   unlock      T1.lock.depth
+                            waiter.depth = 2
+
+T2          lock   lock.notify      unlock                   T2.lock.depth
+
+
+T3   lock  lock.await  lock        lock.await                  unlock unlock
+               waiter.depth = 1         waiter.depth = 2
+
+
+
+   Condition c = lock.createCondition()
+
+
+
+       c.await()  {
+
+ */

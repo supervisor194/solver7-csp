@@ -17,7 +17,7 @@ public class CountdownLatch {
         defer {
             l.unlock()
         }
-        while n.load(ordering: .relaxed) != 0 {
+        while n.load(ordering: .relaxed) > 0 && !TimeoutState.expired(timeoutTime) {
             l.doWait(&timeoutTime)
         }
     }

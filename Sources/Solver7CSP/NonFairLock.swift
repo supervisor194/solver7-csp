@@ -6,12 +6,14 @@ public class NonFairLock: ReentrantLock {
         let tc = ThreadContext.currentContext()
         if state.compareExchange(expected: NonFairLock.UNLOCKED, desired: NonFairLock.LOCKED, ordering: .relaxed).exchanged {
             lockingTc = tc
+            depth += 1
             return
         }
         if lockingTc !== tc {
             schedule(tc)
             lockingTc = tc
         }
+        depth += 1
     }
 
 }

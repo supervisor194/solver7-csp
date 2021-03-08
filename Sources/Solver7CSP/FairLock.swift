@@ -9,6 +9,7 @@ public class FairLock: ReentrantLock {
                 if state.compareExchange(expected: ReentrantLock.UNLOCKED,
                         desired: ReentrantLock.LOCKED, ordering: .relaxed).exchanged {
                     lockingTc = tc
+                    depth += 1
                     return
                 }
             }
@@ -17,5 +18,6 @@ public class FairLock: ReentrantLock {
             schedule(tc)
             lockingTc = tc
         }
+        depth += 1
     }
 }

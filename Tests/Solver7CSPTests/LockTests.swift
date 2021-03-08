@@ -7,33 +7,33 @@ import Darwin.C
 
 class LockTests: XCTestCase {
 
-    func testOneThread() throws {
+    func testNestedLocks() throws {
         var cnt = 0
-        let latch = try CountdownLatch2(1)
-        let latch2 = try CountdownLatch2(1)
-        let lock = NonFairLock(2)
+        let l1 = try CountdownLatch(1)
+        let l2 = try CountdownLatch2(1)
+        let l3 = try CountdownLatch2(1)
+        let l4 = try CountdownLatch(1)
+        let lock = NonFairLock(5)
         var xyz = 99
         let myRunnable = { () -> Void in
-            sleep(1)
-            // print("thread locking foo2")
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+            l1.await(&timeoutAt)
+            XCTAssertEqual(0, l1.get())
             lock.lock()
             lock.lock()
             lock.lock()
             xyz = -1
-            // print("thread sleeping another 2")
-            sleep(1)
-            // print("thread notifying any waiters")
             lock.doNotify()
-            // print("thread unlocking foo2")
             cnt += 1
             lock.unlock()
-            // print("thread unlocked foo2")
-            latch.countDown()
+            l2.countDown()
+            lock.unlock()
+            lock.unlock()
         }
 
         func dm() -> Void {
             // print("in the destroy me for myRunnable")
-            latch2.countDown()
+            l3.countDown()
         }
 
         let tc = ThreadContext( name: "howdy doody", destroyMe: dm, execute: myRunnable)
@@ -41,25 +41,39 @@ class LockTests: XCTestCase {
         XCTAssertEqual(-1, tc.start())
 
         lock.lock()
+        l1.countDown()
         lock.doWait()
         lock.unlock()
 
         let tc2 = ThreadContext(name: "foo") {
-            lock.lock();
+            lock.lock()
+            l4.countDown()
+            lock.lock()
             cnt+=1
             lock.unlock()
-            latch.countDown()
+            // lock.unlock()  add to fail by letting tc3 acquire lock
+            l2.countDown()
         }
         XCTAssertEqual(0, tc2.start())
 
+        let tc3 = ThreadContext(name: "CannotLock") {
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 2000)
+            l4.await(&timeoutAt)
+            XCTAssertEqual(0, l4.get())
+            lock.lock()
+            XCTFail("should not get here")
+        }
+        tc3.start()
 
-        latch.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
-        XCTAssertEqual(0, latch.get())
+        l2.await(TimeoutState.computeTimeoutTimespec(sec: 5, nanos: 0))
+        XCTAssertEqual(0, l2.get())
         XCTAssertEqual(-1, xyz)
         XCTAssertEqual(2, cnt)
 
-        latch2.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
-        XCTAssertEqual(0, latch2.get())
+        l3.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
+        XCTAssertEqual(0, l3.get())
+
+        sleep(1)
     }
 
 
@@ -80,17 +94,17 @@ class LockTests: XCTestCase {
             XCTAssertEqual(0, tc.start())
         }
 
-        sleep(2)
+        sleep(1)
 
         for _ in 1...20 {
-            sleep(1)
+            usleep(100)
             lock.lock()
             lock.doNotify()
             lock.unlock()
 
         }
 
-        latch.await(TimeoutState.computeTimeoutTimespec(sec: 120))
+        latch.await(TimeoutState.computeTimeoutTimespec(sec: 10))
     }
 
     func test100Threads() throws {
@@ -134,12 +148,52 @@ class LockTests: XCTestCase {
         latch.await(TimeoutState.computeTimeoutTimespec(millis: 10000))
         XCTAssertEqual(0, latch.get())
         XCTAssertEqual(0, xyz)
+    }
 
 
+    public func testConditions() throws  {
 
+        var lock = NonFairLock(10)
+
+        var condition : [Condition] = []
+
+        for _ in 1...10 {
+            condition.append(lock.createCondition())
+        }
+
+        for i in 0...8 {
+            let tc = ThreadContext(name: "\(i)") {
+                lock.lock()
+                defer {
+                    lock.unlock()
+                }
+                condition[i].doWait()
+                usleep(200)
+                condition[i+1].doNotify()
+                print("\(i) done")
+            }
+            tc.start()
+        }
+
+        sleep(1)
+        lock.lock()
+        print("main doing notify 0")
+        condition[0].doNotify()
+        print("main did notify, sleeping 2 before unlock")
+        sleep(2)
+        lock.unlock()
+
+        lock.lock()
+        print("main waiting on condition 9")
+        condition[9].doWait()
+        print("main, condition 9 done")
+        lock.unlock()
     }
 
     static var allTests = [
-        ("testOneThread", testOneThread),
+        ("testNestedLocks", testNestedLocks),
+        ("testConditions", testConditions),
+        ("testMultipleDoWaits", testMultipleDoWaits),
+        ("test100Threads", test100Threads),
     ]
 }

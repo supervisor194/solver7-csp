@@ -78,7 +78,7 @@ class LatchTests :XCTestCase  {
     }
 
 
-    public func testCountdownLatch2() throws  {
+    public func testCountdownLatch() throws  {
         let latch = try CountdownLatch(100)
         let tc = ThreadContext(name: "writer") {
             for _ in 1...90 {
@@ -93,7 +93,7 @@ class LatchTests :XCTestCase  {
         XCTAssertEqual(0, latch.get())
     }
 
-    public func testCountdownLatch2Exceed() throws {
+    public func testCountdownLatchExceed() throws {
         let latch = try CountdownLatch(100)
         let tc = ThreadContext(name: "writer") {
             for _ in 1...90 {
@@ -108,7 +108,7 @@ class LatchTests :XCTestCase  {
     }
 
 
-    public func testCountdownLatch2Timeout() throws  {
+    public func testCountdownLatchTimeout() throws  {
         let latch = try CountdownLatch(100)
 
         var t1 = timeval()
