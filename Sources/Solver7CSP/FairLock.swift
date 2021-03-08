@@ -1,8 +1,8 @@
 import Foundation
 
-public class FairLock: ReentrantLock {
+public final class FairLock: ReentrantLock {
 
-    override public func lock() -> Void {
+    override public final func lock() -> Void {
         let tc = ThreadContext.currentContext()
         if state.load(ordering: .relaxed) == ReentrantLock.UNLOCKED {
             if waitQHeadPtr.load(ordering: .relaxed).pointee == nil {

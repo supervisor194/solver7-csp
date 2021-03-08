@@ -1,8 +1,8 @@
 import Foundation
 
-public class NonFairLock: ReentrantLock {
+public final class NonFairLock: ReentrantLock {
 
-    override public func lock() -> Void {
+    override public final func lock() -> Void {
         let tc = ThreadContext.currentContext()
         if state.compareExchange(expected: NonFairLock.UNLOCKED, desired: NonFairLock.LOCKED, ordering: .relaxed).exchanged {
             lockingTc = tc

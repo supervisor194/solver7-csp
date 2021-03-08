@@ -49,5 +49,67 @@ When a Channel is Selectable it can be used by a Selector over multiple selectab
      }
 ```
 
+This implementation provides two Channels and a Timeout along with a FairSelector that support multiple
+writers and readers. 
+```
+public class NonSelectableChannel<T>: Channel
+public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable
+public class Timeout<T>: Selectable
+
+public protocol Selector 
+public class FairSelector: Selector
+```
+The Channel instances may be created as per the examples or with a ChannelFactory.  Extend
+the ChannelFactory as necessary to support convenient initialization.
+
+The hopefully efficient locking mechanisms that back the implementations are useful by themselves.
+```
+public protocol Lock
+open class ReentrantLock: Lock 
+public final class FairLock: ReentrantLock 
+public final class NonFairLock: ReentrantLock
+
+let lock = NonFairLock(10) 
+let sumReady = lock.createCondition()
+var sum = 0 
+
+// Thread A 
+do {
+ lock.lock 
+ defer {
+  lock.unlock()
+ }
+ condition.doWait()
+ assertEquals(77, sum) 
+}
+
+// Thread B
+do {
+  lock.lock()
+  defer {
+    lock.unlock()
+  }
+  sum += 77
+  condition.doNotify()
+}
+```
+These locks are built on top of lower level, OS level, Mutexes and Conditions.
+```
+class Mutex {
+ private var mutex: pthread_mutex_t
+}
+
+class UpDown {  
+  private var mutex: pthread_mutex_t
+  private var condition: pthread_cond_t
+}  
+```
+Similarly, there are Semaphores and Latches that are built upon the underlying Channels,
+Lock, Mutexes and UpDown.
+```
+public class Semaphore
+public class CountdownLatch 
+```
+
 
 
