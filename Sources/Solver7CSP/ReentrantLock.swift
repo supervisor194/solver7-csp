@@ -118,16 +118,6 @@ open class ReentrantLock: Lock {
         waiterPool.put(waiter)
     }
 
-    /*
-
-      condition.doWait()
-          gets a waiter = waiterPool.get()
-            sets waiter.depth = lock.depth
-          waiterQ.add(waiter)
-          condition.waiter = waiter
-
-
-      */
     public func doWait(_ timeoutAt: inout timespec) -> Void {
         let waiter = waiterPool.get()!
         waiter._tc = ThreadContext.currentContext()

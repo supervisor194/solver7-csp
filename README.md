@@ -34,7 +34,7 @@ Reader  {
 }
 ```
 
-When a Channel is Selectable it can be used by a Selector over multiple selectables channels and timers.
+When a Channel is Selectable it can be used by a Selector over multiple selectables, channels and timers.
 
 ```
      SelectableChannel 1
