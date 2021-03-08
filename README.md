@@ -7,7 +7,7 @@ It can be thought of as a rendezvous point for two or more threads wishing to co
 Writer --> Channel <-- Reader 
 ```
 
-where Channel has a single item buffer whereupon a Writer.write blocks after filling the Channel to capaicty
+where Channel has a single item buffer whereupon a Writer.write blocks after filling the Channel to capacity
 until a Reader.read clears the Channel.  This concept can be extended to allow buffered Channels whereupon the 
 Writer.write blocks when the buffered Channel remains at capacity.  
 
