@@ -152,17 +152,15 @@ class LockTests: XCTestCase {
 
 
     public func testConditions() throws  {
-
         var lock = NonFairLock(10)
-
         var condition : [Condition] = []
-
         for _ in 1...10 {
             condition.append(lock.createCondition())
         }
-
+        let l1 = try CountdownLatch(9)
         for i in 0...8 {
             let tc = ThreadContext(name: "\(i)") {
+                l1.countDown()
                 lock.lock()
                 defer {
                     lock.unlock()
@@ -175,19 +173,31 @@ class LockTests: XCTestCase {
             tc.start()
         }
 
-        sleep(1)
-        lock.lock()
-        print("main doing notify 0")
-        condition[0].doNotify()
-        print("main did notify, sleeping 2 before unlock")
-        sleep(2)
-        lock.unlock()
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        l1.await(&timeoutAt)
+        XCTAssertEqual(0, l1.get())
 
-        lock.lock()
-        print("main waiting on condition 9")
-        condition[9].doWait()
-        print("main, condition 9 done")
-        lock.unlock()
+        let l = try CountdownLatch(1)
+        let tc = ThreadContext(name: "activator") {
+            lock.lock()
+            print("main doing notify 0")
+            condition[0].doNotify()
+            print("main did notify, sleeping 1 before unlock")
+            sleep(1)
+            lock.unlock()
+
+            lock.lock()
+            print("main waiting on condition 9")
+            condition[9].doWait()
+            print("main, condition 9 done")
+            lock.unlock()
+            l.countDown()
+        }
+        tc.start()
+
+        timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        l.await(&timeoutAt)
+        XCTAssertEqual(0, l.get())
     }
 
     static var allTests = [
