@@ -79,7 +79,7 @@ do {
  defer {
   lock.unlock()
  }
- condition.doWait()
+ sumReady.doWait()
  assertEquals(77, sum) 
 }
 
@@ -90,7 +90,7 @@ do {
     lock.unlock()
   }
   sum += 77
-  condition.doNotify()
+  sumReady.doNotify()
 }
 ```
 These locks are built on top of lower level, OS level, Mutexes and Conditions.
