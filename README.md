@@ -63,6 +63,7 @@ The Channel instances may be created as per the examples or with a ChannelFactor
 the ChannelFactory as necessary to support convenient initialization.
 
 The hopefully efficient locking mechanisms that back the implementations are useful by themselves.
+They utilize the Swift Atomics package to allow wait free locks when conditions / environment permit.
 ```
 public protocol Lock
 open class ReentrantLock: Lock 
