@@ -6,7 +6,7 @@ Communicating Sequential Processes (CSP – wiki csp) patterns can be found in l
 
 In CSP, the fundamental concept is a Channel. The Channel is a synchronization point for multiple threads of control, including both writers and readers. The Channel is a rendezvous point for two or more threads wishing to communicate. The simplest set up is:
 
-(code examples the same – but replace the word whereupon with where)
+(code examples the same )
 
 Communicating Sequential Processes, CSP, inspired threading data structures and concurrency control.  Swift has Grand Central Dispatch,
 GCD, which is a nice yet quite different model for solving concurrency problems.  CSP influences can
