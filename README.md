@@ -21,14 +21,14 @@ Writer ...         -->  Channel  <--       Reader ...
 Writer N1                                  Reader N2
 
 
-Writer  {
+Writer X {
   while true {
       let msg = buildMsg()
       channel.write(msg)
   }
 }
   
-Reader  {
+Reader Y {
    while true {
        let msg = channel.read()!
        doSomething(msg)
