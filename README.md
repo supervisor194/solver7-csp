@@ -1,18 +1,14 @@
 # Solver7CSP
 
-CSP inspired data structures and control patterns for the Swift programming language.
+CSP inspired data structures and concurrency control for the Swift programming language.
 
-Communicating Sequential Processes (CSP – wiki csp) patterns can be found in languages like Go, Haskell and Clojure, but are not natively present in the Swift programming language. Swift uses Grand Central Dispatch (GCD – wiki GCD) for solving concurrency problems. However [mention a GCD weakness that CSP solves here – in other words, why does someone want to use this library ].
+Communicating Sequential Processes, [Wikipedia-CSP][1], patterns can be found in languages like Go, Haskell and Clojure, 
+but are not natively present in the Swift programming language.  Swift uses Grand Central Dispatch, [Apple GCD][2], for 
+solving concurrency problems. However ...
 
-In CSP, the fundamental concept is a Channel. The Channel is a synchronization point for multiple threads of control, including both writers and readers. The Channel is a rendezvous point for two or more threads wishing to communicate. The simplest set up is:
+In CSP, the fundamental concept is a Channel. The Channel is a synchronization point for multiple threads of control,
+including both writers and readers. The Channel is a rendezvous point for two or more threads wishing to communicate. The simplest set up is:
 
-(code examples the same )
-
-Communicating Sequential Processes, CSP, inspired threading data structures and concurrency control.  Swift has Grand Central Dispatch,
-GCD, which is a nice yet quite different model for solving concurrency problems.  CSP influences can
-be found in languages like Go, Haskell, Clojure, etc. [Wikipedia-CSP][1]    The fundamental concept is
-that of a Channel.  The Channel is a synchronization point for multiple threads of control, writers and readers.  It can
-be thought of as a rendezvous point for two or more threads wishing to communicate.  The simplest setup is
 ```
 Writer --> Channel <-- Reader 
 ```
@@ -124,3 +120,4 @@ public class CountdownLatch
 
 
 [1]: <https://en.wikipedia.org/wiki/Communicating_sequential_processes> "Wikipedia CSP"
+[2]: <https://apple.github.io/swift-corelibs-libdispatch/> "Apple GCD"
