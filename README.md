@@ -2,9 +2,9 @@
 
 Communicating Sequential Processes, CSP, inspired threading data structures and control.  Swift has Grand Central Dispatch,
 GCD, which is a nice yet quite different model for solving concurrency problems.  CSP influences can
-be found in languages like Go, Haskell, Clojure, etc. https://en.wikipedia.org/wiki/Communicating_sequential_processes.   The fundamental concept is
-that of a Channel.  The Channel is a synchronization point for multiple threads of control, writers and readers.  
-It can be thought of as a rendezvous point for two or more threads wishing to communicate.  The simplest setup is
+be found in languages like Go, Haskell, Clojure, etc. [Wikipedia-CSP][1]    The fundamental concept is
+that of a Channel.  The Channel is a synchronization point for multiple threads of control, writers and readers.  It can
+be thought of as a rendezvous point for two or more threads wishing to communicate.  The simplest setup is
 ```
 Writer --> Channel <-- Reader 
 ```
@@ -115,4 +115,4 @@ public class CountdownLatch
 ```
 
 
-
+[1]: <https://en.wikipedia.org/wiki/Communicating_sequential_processes> "Wikipedia CSP"
