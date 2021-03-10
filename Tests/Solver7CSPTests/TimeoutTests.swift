@@ -38,27 +38,21 @@ class TimeoutTests: XCTestCase {
     }
 
     public func testExpirations() throws {
-
         var now = timeval()
         gettimeofday(&now, nil)
         let timeoutTimespec = TimeoutState.computeTimeoutTimespec(sec: 2, nanos: 300)
-
         XCTAssertFalse( TimeoutState.earlier(time: timeoutTimespec, earlierThan: now))
-
         now.tv_sec += 1
         XCTAssertFalse( TimeoutState.earlier(time: timeoutTimespec, earlierThan: now))
-
         now.tv_sec += 1
         XCTAssertFalse( TimeoutState.earlier(time: timeoutTimespec, earlierThan: now))
-
         now.tv_usec += 1001
         XCTAssertTrue( TimeoutState.earlier(time: timeoutTimespec, earlierThan: now))
-
     }
-
 
     static var allTests = [
         ("testComputeTimeoutTimespec", testComputeTimeoutTimespec),
+        ("testComputeTimeoutTimespecWithMillis", testComputeTimeoutTimespecWithMillis),
         ("testExpirations", testExpirations),
     ]
 

@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 @testable import Solver7CSP
 
-class BarrierTests : XCTestCase {
+class BarrierTests: XCTestCase {
 
 
     public func test5Workers() throws {
@@ -25,7 +25,7 @@ class BarrierTests : XCTestCase {
         XCTAssertEqual(0, mTC.start())
 
         let latch = try CountdownLatch2(1)
-        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { ()->Void in
+        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
             print("hello there, i'm task 1")
             latch.countDown()
         })
@@ -38,7 +38,7 @@ class BarrierTests : XCTestCase {
         let latch2 = try CountdownLatch2(1)
         let latch3 = try CountdownLatch2(1)
 
-        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { ()->Void in
+        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
             print("i'm a delaying task")
             latch2.await(TimeoutState.computeTimeoutTimespec(millis: 5000))
             XCTAssertEqual(0, latch2.get())
@@ -57,4 +57,8 @@ class BarrierTests : XCTestCase {
         XCTAssertEqual(0, latch3.get())
         XCTAssertEqual(77, val)
     }
+
+    static var allTests = [
+        ("test5Workers", test5Workers),
+    ]
 }

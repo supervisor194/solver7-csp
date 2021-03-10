@@ -126,6 +126,10 @@ class LatchTests :XCTestCase  {
     static var allTests = [
         ("testManyThreadsTo0", testManyThreadsTo0),
         ("testOneBigDecrementBeyond0", testOneBigDecrementBeyond0),
+        ("testTimeout", testTimeout),
+        ("testCountdownLatch", testCountdownLatch),
+        ("testCountdownLatchExceed", testCountdownLatchExceed),
+        ("testCountdownLatchTimeout",testCountdownLatchTimeout),
     ]
 
 }

@@ -152,4 +152,11 @@ class FactoryTest: XCTestCase {
         XCTAssertEqual(0, lt2.get())
 
     }
+
+    static var allTests = [
+        ("testOne", testOne),
+        ("testStoreCreationOfLLQ", testStoreCreationOfLLQ),
+        ("testStoreCreationOfSVS", testStoreCreationOfSVS),
+        ("testSelectables", testSelectables),
+    ]
 }

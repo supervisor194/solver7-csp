@@ -55,4 +55,8 @@ class SingleValueStoreTests : XCTestCase {
         XCTAssertEqual(0, ch2.numAvailable())
 
     }
+
+    static var allTests = [
+        ("testAll", testAll),
+    ]
 }

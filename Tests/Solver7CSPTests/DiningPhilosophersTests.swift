@@ -4,6 +4,9 @@ import XCTest
 
 class DiningPhilosophersTests  : XCTestCase {
 
+    static var allTests = [
+        ("testFoo", testFoo),
+    ]
 
     public func testFoo() throws  {
 
@@ -140,4 +143,6 @@ class Porter {
             availableEnterTokens.write(token)
         }
     }
+
+
 }

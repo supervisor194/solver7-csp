@@ -4,11 +4,9 @@ import Atomics
 
 @testable import Solver7CSP
 
+class CountdownLatchTests: XCTestCase {
 
-class CountdownLatchTests : XCTestCase {
-
-
-    public func testAwaitBeforeCountdown() throws  {
+    public func testAwaitBeforeCountdown() throws {
         let latch = CountdownLatch(1)
         let x = ManagedAtomic<Int>(1)
         let w = ThreadContext(name: "writer") {
@@ -47,6 +45,9 @@ class CountdownLatchTests : XCTestCase {
         XCTAssertEqual(0, latch.get())
     }
 
-
+    static var allTests = [
+        ("testAwaitBeforeCountdown", testAwaitBeforeCountdown),
+        ("testCountDownBeforeAwait", testCountDownBeforeAwait),
+    ]
 
 }

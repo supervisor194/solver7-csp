@@ -3,7 +3,7 @@ import XCTest
 
 import Foundation
 
-class SemaphoreTests : XCTestCase {
+class SemaphoreTests: XCTestCase {
 
     public func testBasic() throws {
         let N = 10
@@ -15,7 +15,7 @@ class SemaphoreTests : XCTestCase {
             let tc = ThreadContext(name: "t\(i)") {
                 for _ in 1...100 {
                     s.take()
-                    cnt+=1
+                    cnt += 1
                     s.release()
                 }
                 latch.countDown()
@@ -24,7 +24,7 @@ class SemaphoreTests : XCTestCase {
         }
         s.release()
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
-        XCTAssertEqual(100*10, cnt)
+        XCTAssertEqual(100 * 10, cnt)
     }
 
     public func testNPer() throws {
@@ -48,7 +48,7 @@ class SemaphoreTests : XCTestCase {
         let tc2 = ThreadContext(name: "t2") {
             l1.await(TimeoutState.computeTimeoutTimespec(sec: 5))
             s.take(100)
-            cnt+=1
+            cnt += 1
             s.release(20)
             for _ in 1...50 {
                 s.release(1)
@@ -65,4 +65,9 @@ class SemaphoreTests : XCTestCase {
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
         XCTAssertEqual(2, cnt)
     }
+
+    static var allTests = [
+        ("testBasic", testBasic),
+        ("testNPer", testNPer),
+    ]
 }

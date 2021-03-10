@@ -1,10 +1,23 @@
 import Foundation
 
+public protocol ReadableChannel {
+    associatedtype Item
+    func read() -> Item?
+    func read(into: inout [Item?], upTo: Int) -> Void
+    func numAvailable() -> Int
+}
+
+public protocol WritableChannel {
+    associatedtype Item
+    func write(_ item: Item?)
+}
+
+
 public protocol Channel: ReadableChannel, WritableChannel {
 }
 
 public class AnyChannel<T>: Channel {
-    public typealias Item = T // todo: remove ???
+    public typealias Item = T
 
     private let _read: () -> T?
 
@@ -45,7 +58,7 @@ public class AnyChannel<T>: Channel {
     public init<C: Channel>(_ c: C) where C.Item == T {
         _isSelectable = c is Selectable
         if _isSelectable {
-            _selectable = c as! SelectableChannel<T>
+            _selectable = (c as! SelectableChannel<T>)
         } else {
             _selectable = nil
         }

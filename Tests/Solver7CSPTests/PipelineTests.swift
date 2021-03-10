@@ -13,14 +13,14 @@ class PipelineTests: XCTestCase {
 
         let N = 5
         let W = 10
-        let UW2 = UInt64(W*2)
+        let UW2 = UInt64(W * 2)
         let l1 = CountdownLatch(W)
-        var level1Channels : [SelectableChannel<Int>] = []
+        var level1Channels: [SelectableChannel<Int>] = []
         for i in 1...W {
             level1Channels.append(ChannelFactory.AsSelectable.SLLQ(id: "level1:\(i)", max: 100,
-                    writeLock: NonFairLock(2*W), readLock: NonFairLock(1)).create(t: Int.self))
+                    writeLock: NonFairLock(2 * W), readLock: NonFairLock(1)).create(t: Int.self))
             level1Channels.append(ChannelFactory.AsSelectable.SSVS(id: "level1b:\(i)",
-                    writeLock: NonFairLock(2*W), readLock: NonFairLock(1)).create(t: Int.self))
+                    writeLock: NonFairLock(2 * W), readLock: NonFairLock(1)).create(t: Int.self))
         }
         var rng = SystemRandomNumberGenerator()
         for i in 1...W {
@@ -29,7 +29,7 @@ class PipelineTests: XCTestCase {
                 while x <= N {
                     let ch = Int(rng.next() % UW2)
                     level1Channels[ch].write(x)
-                    x+=1
+                    x += 1
                 }
                 l1.countDown()
             }
@@ -42,8 +42,8 @@ class PipelineTests: XCTestCase {
         for i in 1...W {
             let reader = ThreadContext(name: "R1:\(i)") {
                 var selectables: [Selectable] = []
-                let ch1 = level1Channels[(i-1)*2]
-                let ch2 = level1Channels[(i-1)*2+1]
+                let ch1 = level1Channels[(i - 1) * 2]
+                let ch2 = level1Channels[(i - 1) * 2 + 1]
                 ch1.setHandler() {
                     io1.write(ch1.read())
                 }
@@ -88,7 +88,7 @@ class PipelineTests: XCTestCase {
         let l2 = CountdownLatch(1)
         var cnt = 0
         let outputReader = ThreadContext(name: "OutputReader") {
-            while cnt < N*W {
+            while cnt < N * W {
                 let val = output.read()!
                 cnt += 1
             }
@@ -104,9 +104,9 @@ class PipelineTests: XCTestCase {
         timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
         l2.await(&timeoutAt)
         XCTAssertEqual(0, l2.get())
-        XCTAssertEqual(N*W, cnt)
+        XCTAssertEqual(N * W, cnt)
 
-        for i in 0...level1Channels.count-1 {
+        for i in 0...level1Channels.count - 1 {
             XCTAssertEqual(0, level1Channels[i].numAvailable())
         }
         XCTAssertEqual(0, io1.numAvailable())
@@ -143,9 +143,9 @@ class PipelineTests: XCTestCase {
         while i < 1000000 {
             let tA = SillyTaskA(msg: "howdy doody")
             dA.dispatch(task: tA)
-            i+=1
+            i += 1
         }
-        l1.await(TimeoutState.computeTimeoutTimespec(sec: 30, nanos:0 ))
+        l1.await(TimeoutState.computeTimeoutTimespec(sec: 30, nanos: 0))
         d0.stop()
         print("done :\(d0.milliseconds)")
 
@@ -160,22 +160,22 @@ class PipelineTests: XCTestCase {
 
         let tc0 = ThreadContext(name: "tc0") {
             var i = 0
-            while i<1000000 {
+            while i < 1000000 {
                 taskQ1.write(" howdy \(i)")
-                i+=1
+                i += 1
             }
         }
         XCTAssertEqual(0, tc0.start())
 
         let r2 = { () -> Void in
             while true {
-                var msgs : [String?] = []
+                var msgs: [String?] = []
                 taskQ1.read(into: &msgs, upTo: 1000)
-                let  s = msgs.count
+                let s = msgs.count
                 var i = 0
                 while i < s {
                     taskQ2.write(msgs[i])
-                    i+=1
+                    i += 1
                 }
             }
         }
@@ -191,12 +191,12 @@ class PipelineTests: XCTestCase {
          */
         let l2 = try CountdownLatch2(1)
 
-        let r3 = { ()->Void in
+        let r3 = { () -> Void in
             var cnt = 0
             while cnt < 1000000 {
-                var msgs : [String?] = []
+                var msgs: [String?] = []
                 taskQ2.read(into: &msgs, upTo: 1000)
-                cnt+=msgs.count
+                cnt += msgs.count
             }
             // print("done r3")
             l2.countDown()
@@ -210,8 +210,8 @@ class PipelineTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testB1", testDispatchQueues),
-
+        ("testManyWritersManyReaders", testManyWritersManyReaders),
+        ("testDispatchQueues", testDispatchQueues),
     ]
 }
 
@@ -226,18 +226,18 @@ protocol SillyTask {
 
 protocol Dispatcher {
 
-    var name:String { get }
+    var name: String { get }
 
     func dispatch(task: SillyTask) -> Void
 
 }
 
-class BasicDispatcher : Dispatcher {
+class BasicDispatcher: Dispatcher {
 
     let name: String
-    let df: (SillyTask)->Void
+    let df: (SillyTask) -> Void
 
-    init(name: String, df: @escaping (SillyTask) -> Void ) {
+    init(name: String, df: @escaping (SillyTask) -> Void) {
         self.name = name
         self.df = df
     }
@@ -257,13 +257,13 @@ class Dispatchers {
     private init() {
     }
 
-    var dispatchers : [ String: Dispatcher] = [:]
+    var dispatchers: [String: Dispatcher] = [:]
 
     func add(dispatcher: Dispatcher) {
-       dispatchers[dispatcher.name] = dispatcher
+        dispatchers[dispatcher.name] = dispatcher
     }
 
-    func lookup(name:String) -> Dispatcher? {
+    func lookup(name: String) -> Dispatcher? {
         dispatchers[name]
     }
 
@@ -272,17 +272,17 @@ class Dispatchers {
     }
 }
 
-class SillyTaskA : SillyTask  {
+class SillyTaskA: SillyTask {
 
     static let name = "A"
 
-    var name : String {
+    var name: String {
         get {
             SillyTaskA.name
         }
     }
 
-    let msg:String
+    let msg: String
 
     init(msg: String) {
         self.msg = msg
@@ -296,17 +296,17 @@ class SillyTaskA : SillyTask  {
 
 }
 
-class SillyTaskB : SillyTask  {
+class SillyTaskB: SillyTask {
 
     static let name = "B"
 
-    var name : String {
+    var name: String {
         get {
             SillyTaskB.name
         }
     }
 
-    let msg:String
+    let msg: String
 
     init(msg: String) {
         self.msg = msg
@@ -320,7 +320,7 @@ class SillyTaskB : SillyTask  {
 
 }
 
-class SillyTaskC : SillyTask  {
+class SillyTaskC: SillyTask {
 
     static let name = "C"
 
@@ -330,11 +330,11 @@ class SillyTaskC : SillyTask  {
         }
     }
 
-    static var GL : CountdownLatch2? = nil
+    static var GL: CountdownLatch2? = nil
 
-    let msg:String
+    let msg: String
     static var _cnt = 0
-    var cnt : Int {
+    var cnt: Int {
         get {
             SillyTaskC._cnt
         }

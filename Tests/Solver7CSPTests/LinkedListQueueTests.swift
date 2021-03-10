@@ -7,8 +7,6 @@ class LinkedListQueueTests: XCTestCase {
 
 
     func testManyWritersSingleReader() throws  {
-
-
         let latch = try CountdownLatch2(11) // 10 writers, 1 reader
         let c = NonSelectableChannel(store: AnyStore( LinkedListQueue<String> (max: 10)))
 
@@ -41,10 +39,10 @@ class LinkedListQueueTests: XCTestCase {
 
         XCTAssertEqual(0, latch.get())
         XCTAssertEqual(1000, cnt)
-
     }
-    func testAll() {
 
+
+    func testAll() {
         let q = LinkedListQueue<MyInt64>(max: 100)
         XCTAssertEqual(100, q.max)
         XCTAssertTrue(q.isEmpty())
@@ -89,8 +87,10 @@ class LinkedListQueueTests: XCTestCase {
         XCTAssertTrue(q.isEmpty())
         XCTAssertFalse(q.isFull())
     }
+
     static var allTests = [
         ("testAll", testAll),
+        ("testManyWritersSingleReader", testManyWritersSingleReader),
     ]
 }
 
