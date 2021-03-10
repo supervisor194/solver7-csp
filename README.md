@@ -102,7 +102,7 @@ do {
   sumReady.doNotify()
 }
 ```
-These locks are built on top of lower level, OS level, Mutexes and Conditions.
+These locks are built on top of lower level, OS level, Mutexes and Conditions in addition to the Swift Atomics.
 ```
 class Mutex {
  private var mutex: pthread_mutex_t
