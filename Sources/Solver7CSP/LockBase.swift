@@ -1,7 +1,6 @@
 import Foundation
 import Atomics
 
-typealias NodePtr = UnsafeMutablePointer<WaitQNode>
 
 open class LockBase {
 

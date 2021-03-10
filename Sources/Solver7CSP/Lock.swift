@@ -130,6 +130,7 @@ class TCNode: Equatable {
     }
 }
 
+typealias NodePtr = UnsafeMutablePointer<WaitQNode>
 
 class WaitQNode: TCNode {
     var _nextPtr: NodePtr? = nil
