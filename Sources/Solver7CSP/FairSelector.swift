@@ -9,6 +9,7 @@ public class FairSelector: Selector {
 
     let state = ManagedAtomic<Int>(0)
     let stateLock = NonFairLock(10)
+    let condition : Condition
 
     let selectables = CircularDoubleLinkedList<Selectable>()
     var idealNext: CDLLNode<Selectable>? = nil
@@ -26,6 +27,8 @@ public class FairSelector: Selector {
     public init(_ selectables: [Selectable]) throws {
         state.store(FairSelector.INACTIVE, ordering: .relaxed)
         hasTimeout = false
+        condition = stateLock.createCondition()
+
         for s in selectables {
             try addSelectable(s)
         }
@@ -86,9 +89,9 @@ public class FairSelector: Selector {
                 }
                 if state.compareExchange(expected: FairSelector.ENABLING, desired: FairSelector.WAITING, ordering: .relaxed).exchanged {
                     if hasTimeout && !TimeoutState.expired(timeoutAt!) {
-                        stateLock.doWait(&timeoutAt!)
+                        condition.doWait(&timeoutAt!)
                     } else {
-                        stateLock.doWait()
+                        condition.doWait()
                     }
                 }
             }
@@ -125,7 +128,7 @@ public class FairSelector: Selector {
             defer {
                 stateLock.unlock()
             }
-            stateLock.doNotify()
+            condition.doNotify()
         }
     }
 

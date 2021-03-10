@@ -6,10 +6,12 @@ public class CountdownLatch {
     private let n: ManagedAtomic<Int>
 
     private let l: Lock
+    private let c: Condition
 
     public init(_ n: Int, _ maxThreads: Int = 10) {
         self.n = ManagedAtomic<Int>(n)
         l = NonFairLock(maxThreads)
+        c = l.createCondition()
     }
 
     public func await(_ timeoutTime: inout timespec) {
@@ -18,7 +20,7 @@ public class CountdownLatch {
             l.unlock()
         }
         while n.load(ordering: .relaxed) > 0 && !TimeoutState.expired(timeoutTime) {
-            l.doWait(&timeoutTime)
+            c.doWait(&timeoutTime)
         }
     }
 
@@ -28,7 +30,7 @@ public class CountdownLatch {
             defer {
                 l.unlock()
             }
-            l.doNotify()
+            c.doNotify()
         }
     }
 
@@ -38,17 +40,17 @@ public class CountdownLatch {
             defer {
                 l.unlock()
             }
-            l.doNotify()
+            c.doNotify()
         }
     }
 
     public func get() -> Int {
-        let c = n.load(ordering: .relaxed)
-        if c < 0 {
+        let count = n.load(ordering: .relaxed)
+        if count < 0 {
             n.store(0, ordering: .relaxed)
             return 0
         }
-        return c
+        return count
     }
 
 }

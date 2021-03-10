@@ -1,10 +1,10 @@
 import Foundation
 
-public final class NonFairLock: ReentrantLock {
+public final class NonFairLock: LockBase, Lock {
 
-    override public final func lock() -> Void {
+    public func lock() -> Void {
         let tc = ThreadContext.currentContext()
-        if state.compareExchange(expected: NonFairLock.UNLOCKED, desired: NonFairLock.LOCKED, ordering: .relaxed).exchanged {
+        if state.compareExchange(expected: LockState.UNLOCKED, desired: LockState.LOCKED, ordering: .relaxed).exchanged {
             lockingTc = tc
             depth += 1
             return
@@ -16,4 +16,8 @@ public final class NonFairLock: ReentrantLock {
         depth += 1
     }
 
+
+    public func createCondition() -> Condition {
+        Condition(self)
+    }
 }

@@ -10,6 +10,7 @@ public class NonSelectableChannel<T>: Channel {
 
     let writeLock: Lock
     let readLock: Lock
+    let notEmpty: Condition
 
     var s: AnyStore<T>
 
@@ -20,6 +21,7 @@ public class NonSelectableChannel<T>: Channel {
         capacityMinus2 = capacity - 2
         self.writeLock = writeLock
         self.readLock = readLock
+        notEmpty = readLock.createCondition()
     }
 
     public func write(_ item: T?) {
@@ -34,7 +36,7 @@ public class NonSelectableChannel<T>: Channel {
                 defer {
                     readLock.unlock()
                 }
-                readLock.doNotify()
+                notEmpty.doNotify()
             }
         }
         while s.count == capacity {
@@ -52,13 +54,13 @@ public class NonSelectableChannel<T>: Channel {
                 readLock.unlock()
             }
             while s.count == 0 {
-                readLock.doWait()
+                notEmpty.doWait()
 
             }
             o = s.get()
             c = s.count
             if c > 0 {
-                readLock.doNotify()
+                notEmpty.doNotify()
             }
         }
         if c >= capacityMinus1 {
@@ -76,11 +78,11 @@ public class NonSelectableChannel<T>: Channel {
                 readLock.unlock()
             }
             while s.count == 0 {
-                readLock.doWait()
+                notEmpty.doWait()
             }
             (c, r) = s.get(into: &into, upTo: upTo)
             if r > 0 {
-                readLock.doNotify()
+                notEmpty.doNotify()
             }
         }
         if c >= capacity - upTo {

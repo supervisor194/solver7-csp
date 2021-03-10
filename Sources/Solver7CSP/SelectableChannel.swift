@@ -80,7 +80,7 @@ public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable {
                 defer {
                     readLock.unlock()
                 }
-                readLock.doNotify()
+                notEmpty.doNotify()
             }
         }
         while s.count == capacity {

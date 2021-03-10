@@ -1,13 +1,13 @@
 import Foundation
 
-public final class FairLock: ReentrantLock {
+public final class FairLock: LockBase, Lock {
 
-    override public final func lock() -> Void {
+    public func lock() -> Void {
         let tc = ThreadContext.currentContext()
-        if state.load(ordering: .relaxed) == ReentrantLock.UNLOCKED {
+        if state.load(ordering: .relaxed) == LockState.UNLOCKED {
             if waitQHeadPtr.load(ordering: .relaxed).pointee == nil {
-                if state.compareExchange(expected: ReentrantLock.UNLOCKED,
-                        desired: ReentrantLock.LOCKED, ordering: .relaxed).exchanged {
+                if state.compareExchange(expected: LockState.UNLOCKED,
+                        desired: LockState.LOCKED, ordering: .relaxed).exchanged {
                     lockingTc = tc
                     depth += 1
                     return
@@ -19,5 +19,9 @@ public final class FairLock: ReentrantLock {
             lockingTc = tc
         }
         depth += 1
+    }
+
+    public func createCondition() -> Condition {
+        Condition(self)
     }
 }

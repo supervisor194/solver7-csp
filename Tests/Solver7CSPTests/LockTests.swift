@@ -14,6 +14,7 @@ class LockTests: XCTestCase {
         let l3 = try CountdownLatch2(1)
         let l4 = try CountdownLatch(1)
         let lock = NonFairLock(5)
+        let condition = lock.createCondition()
         var xyz = 99
         let myRunnable = { () -> Void in
             var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
@@ -23,7 +24,7 @@ class LockTests: XCTestCase {
             lock.lock()
             lock.lock()
             xyz = -1
-            lock.doNotify()
+            condition.doNotify()
             cnt += 1
             lock.unlock()
             l2.countDown()
@@ -42,7 +43,7 @@ class LockTests: XCTestCase {
 
         lock.lock()
         l1.countDown()
-        lock.doWait()
+        condition.doWait()
         lock.unlock()
 
         let tc2 = ThreadContext(name: "foo") {
@@ -82,11 +83,11 @@ class LockTests: XCTestCase {
         let latch = try CountdownLatch2(20)
 
         let lock = NonFairLock(20)
-
+        let condition = lock.createCondition()
         for i in 1...20 {
             let tc = ThreadContext.init(name: "test:\(i)") {
                 lock.lock()
-                lock.doWait()
+                condition.doWait()
                 lock.unlock()
                 // print("done with \(ThreadContext.currentContext().name)")
                 latch.countDown()
@@ -99,7 +100,7 @@ class LockTests: XCTestCase {
         for _ in 1...20 {
             usleep(100)
             lock.lock()
-            lock.doNotify()
+            condition.doNotify()
             lock.unlock()
 
         }
@@ -114,6 +115,7 @@ class LockTests: XCTestCase {
         let latch = try CountdownLatch2(99, writeLock: NonFairLock(100), readLock: NonFairLock(1))
 
         let lock = NonFairLock(100)
+        let condition = lock.createCondition()
 
         var tcs = [ThreadContext]()
 
@@ -122,7 +124,7 @@ class LockTests: XCTestCase {
                 sleep(1)
                 lock.lock()
                 xyz -= 1
-                lock.doNotify()
+                condition.doNotify()
                 lock.unlock()
             }
 
@@ -141,7 +143,7 @@ class LockTests: XCTestCase {
         lock.lock()
         while xyz != 0 {
             // print("waiting...")
-            lock.doWait()
+            condition.doWait()
         }
         lock.unlock()
 

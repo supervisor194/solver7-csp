@@ -54,7 +54,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
     }
 
     public func take() -> T? {
-        get()
+        dequeue()
     }
 
     public func remove(_ node: QStoreNode<T>) -> Bool {
