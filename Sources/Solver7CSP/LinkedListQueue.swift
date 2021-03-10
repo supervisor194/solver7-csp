@@ -5,17 +5,17 @@ import Atomics
  Note: this non-blocking queue is not thread safe.  Channel with read/write locks and count management
  need to surround the usage of this class to make it thread safe.
  */
-public class LinkedListQueue<T: Equatable>: QueueStore {
+class LinkedListQueue<T: Equatable>: QueueStore {
 
     private var _count = ManagedAtomic<Int>(0)
 
-    public var count: Int {
+    var count: Int {
         _count.load(ordering: .acquiring)
     }
 
     private let _max: Int
 
-    public var max: Int {
+    var max: Int {
         get {
             _max
         }
@@ -24,25 +24,25 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
     var head: QStoreNode<T>
     var tail: QStoreNode<T>
 
-    public required init(max: Int) {
+    required init(max: Int) {
         _max = max
         tail = QStoreNode(nil)
         head = tail
     }
 
-    public func put(_ item: T?) -> Int {
+    func put(_ item: T?) -> Int {
         enqueue(value: item)
     }
 
-    public func putForNode(_ item: T?) -> (Int, U: StoreNode) {
+    func putForNode(_ item: T?) -> (Int, U: StoreNode) {
         enqueueForNode(value: item)
     }
 
-    public func get() -> T? {
+    func get() -> T? {
         dequeue()
     }
 
-    public func get(into: inout [T?], upTo: Int) -> (Int, Int) {
+    func get(into: inout [T?], upTo: Int) -> (Int, Int) {
         let c = count
         let size = min(c, upTo);
         var i = 0
@@ -53,15 +53,15 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         return (c, count)
     }
 
-    public func take() -> T? {
+    func take() -> T? {
         dequeue()
     }
 
-    public func remove(_ node: QStoreNode<T>) -> Bool {
+    func remove(_ node: QStoreNode<T>) -> Bool {
         return false
     }
 
-    public func remove(_ item: T?) -> Bool {
+    func remove(_ item: T?) -> Bool {
         var p: QStoreNode = head
         var n: QStoreNode? = p.next
         while n != nil {
@@ -80,7 +80,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         return false
     }
 
-    public func clear() -> Int {
+    func clear() -> Int {
         var num: Int = 0
         while _count.loadThenWrappingDecrement(ordering: .relaxed) > 0 {
             dequeue()
@@ -90,7 +90,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         return num
     }
 
-    public var state: StoreState {
+    var state: StoreState {
         let size = _count.load(ordering: .relaxed)
         if (size > 0) {
             if (size != _max) {
@@ -101,11 +101,11 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
         return StoreState.EMPTY
     }
 
-    public func isFull() -> Bool {
+    func isFull() -> Bool {
         _max == _count.load(ordering: .relaxed)
     }
 
-    public func isEmpty() -> Bool {
+    func isEmpty() -> Bool {
         0 == _count.load(ordering: .relaxed)
     }
 
@@ -140,7 +140,7 @@ public class LinkedListQueue<T: Equatable>: QueueStore {
 }
 
 
-public class QStoreNode<T>: StoreNode {
+class QStoreNode<T>: StoreNode {
     var value: T?
     var next: QStoreNode?
 

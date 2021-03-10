@@ -151,7 +151,8 @@ class PipelineTests: XCTestCase {
 
         ////////////
 
-        let taskQ1 = AnyChannel(NonSelectableChannel<String>(store: AnyStore(LinkedListQueue<String>(max: 1000))))
+
+        let taskQ1 = AnyChannel(NonSelectableChannel<String>(store: StoreFactory.AsAny.LLQ(max: 1000).create(t: String.self)))
         let taskQ2 = AnyChannel(NonSelectableChannel<String>(store: AnyStore(LinkedListQueue<String>(max: 1000))))
 
         var d = Duration()

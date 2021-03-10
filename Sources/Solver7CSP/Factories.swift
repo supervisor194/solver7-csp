@@ -56,3 +56,27 @@ public extension ChannelFactory {
     }
 
 }
+
+public enum StoreFactory {
+}
+
+public protocol StoreCreator {
+    func create<T: Equatable>(t: T.Type) -> AnyStore<T>
+}
+
+public extension StoreFactory {
+    enum AsAny: StoreCreator {
+        case LLQ(max: Int)
+        case SVS
+
+        public func create<T:Equatable>(t: T.Type) -> AnyStore<T> {
+            switch self {
+            case let .LLQ(max):
+                return AnyStore(LinkedListQueue<T>(max: max))
+            case .SVS:
+                return AnyStore(SingleValueStore<T>())
+            }
+        }
+    }
+}
+

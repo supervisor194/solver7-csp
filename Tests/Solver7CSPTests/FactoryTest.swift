@@ -60,6 +60,28 @@ class FactoryTest: XCTestCase {
         }
     }
 
+    public func testStoreCreationOfLLQ() throws  {
+        let llq = StoreFactory.AsAny.LLQ(max: 10).create(t: Int.self)
+        XCTAssertEqual(10, llq.max)
+        XCTAssertEqual(0, llq.count)
+        llq.put(3)
+        XCTAssertEqual(1, llq.count)
+        let x = llq.get()!
+        XCTAssertEqual(3,x)
+        XCTAssertEqual(0, llq.count)
+    }
+
+    public func testStoreCreationOfSVS() throws  {
+        let svs = StoreFactory.AsAny.SVS.create(t: Int.self)
+        XCTAssertEqual(1, svs.max)
+        XCTAssertEqual(0, svs.count)
+        svs.put(3)
+        XCTAssertEqual(1, svs.count)
+        let x = svs.get()!
+        XCTAssertEqual(3,x)
+        XCTAssertEqual(0, svs.count)
+    }
+
     public func testSelectables() throws  {
 
         var selectables: [Selectable] = []

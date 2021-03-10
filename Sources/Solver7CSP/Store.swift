@@ -16,6 +16,10 @@ public protocol Store: class {
 
     associatedtype Item
 
+    /**
+     Max for the maximum number of Items in a Store.  This is not necessarily a hard imposed limit, but is to
+      be used by the readers and writers.
+     */
     var max: Int { get }
 
     var count: Int { get }

@@ -1,10 +1,10 @@
 import Foundation
 
-public class CircularDoubleLinkedList<T> {
+class CircularDoubleLinkedList<T> {
 
     var _size = 0
 
-    public var size: Int {
+    var size: Int {
         get {
             _size
         }
@@ -13,11 +13,10 @@ public class CircularDoubleLinkedList<T> {
     var head: CDLLNode<T>? = nil
     var tail: CDLLNode<T>? = nil
 
-    public init() {
+    init() {
     }
 
-
-    public func add(_ value: T) -> CDLLNode<T> {
+    func add(_ value: T) -> CDLLNode<T> {
         let last = tail
         let node = CDLLNode<T>(value, last, head)
         tail = node
@@ -32,7 +31,7 @@ public class CircularDoubleLinkedList<T> {
         return node
     }
 
-    public func remove(_ node: CDLLNode<T>) {
+    func remove(_ node: CDLLNode<T>) {
         _size -= 1
         node.value = nil
         if _size == 0 {
@@ -49,7 +48,7 @@ public class CircularDoubleLinkedList<T> {
         }
     }
 
-    public func find(finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
+    func find(finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
         find(beginAt: head, finder: finder)
     }
 
@@ -63,7 +62,7 @@ public class CircularDoubleLinkedList<T> {
         return nil
     }
 
-    public func find(beginAt: CDLLNode<T>?, finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
+    func find(beginAt: CDLLNode<T>?, finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
         if let startAt = startAt(beginAt: beginAt) {
             var node = startAt
             repeat {
@@ -79,7 +78,7 @@ public class CircularDoubleLinkedList<T> {
 }
 
 
-public class CDLLNode<T> {
+class CDLLNode<T> {
 
     var value: T?
     var prev: CDLLNode<T>?
