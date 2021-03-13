@@ -3,7 +3,7 @@ import XCTest
 import Atomics
 import Foundation
 
-class NonSelectableChannelTests : XCTestCase {
+class NonSelectableChannelTests: XCTestCase {
 
     func testSingleValueStore() {
 
@@ -14,7 +14,7 @@ class NonSelectableChannelTests : XCTestCase {
         var t1 = timeval()
         var t2 = timeval()
 
-        let w1 = { ()->Void in
+        let w1 = { () -> Void in
             gettimeofday(&t1, nil)
             c.write(77)
             gettimeofday(&t2, nil)
@@ -24,7 +24,7 @@ class NonSelectableChannelTests : XCTestCase {
         var readTime = timeval()
         var i = 0
         var done = false
-        let r1 = { ()->Void in
+        let r1 = { () -> Void in
             sleep(3)
             gettimeofday(&readTime, nil)
             let val = c.read()!
@@ -39,8 +39,8 @@ class NonSelectableChannelTests : XCTestCase {
         XCTAssertEqual(0, writer.start())
 
         sleep(1)
-        XCTAssertEqual( StoreState.FULL, s.state)
-        XCTAssertTrue( s.isFull())
+        XCTAssertEqual(StoreState.FULL, s.state)
+        XCTAssertTrue(s.isFull())
         XCTAssertFalse(s.isEmpty())
 
         while !done {
@@ -49,12 +49,11 @@ class NonSelectableChannelTests : XCTestCase {
         XCTAssertEqual(77, i)
 
         // want to know that time t2 ~= readTime and about 3 seconds later than t1
-        XCTAssertTrue(  abs(TimeoutState.differenceInUSec(t2, readTime)) < 1000)
-        XCTAssertTrue(  TimeoutState.differenceInUSec(readTime, t1) > 2900000)
-        XCTAssertEqual( 0, s.count)
-        XCTAssertEqual( StoreState.EMPTY, s.state)
+        XCTAssertTrue(abs(TimeoutState.differenceInUSec(t2, readTime)) < 1000)
+        XCTAssertTrue(TimeoutState.differenceInUSec(readTime, t1) > 2900000)
+        XCTAssertEqual(0, s.count)
+        XCTAssertEqual(StoreState.EMPTY, s.state)
     }
-
 
 
     func testSingleValueStoreViaLLQ() {
@@ -65,7 +64,7 @@ class NonSelectableChannelTests : XCTestCase {
         var t1 = timeval()
         var t2 = timeval()
 
-        let w1 = { ()->Void in
+        let w1 = { () -> Void in
             gettimeofday(&t1, nil)
             c.write("hello there")
             gettimeofday(&t2, nil)
@@ -73,12 +72,14 @@ class NonSelectableChannelTests : XCTestCase {
         let writer = ThreadContext(name: "w1", execute: w1)
 
         var readTime = timeval()
+
         class wrap {
             var s: String? = nil
         }
+
         let msg = wrap()
         var done = false
-        let r1 = { ()->Void in
+        let r1 = { () -> Void in
             sleep(3)
             gettimeofday(&readTime, nil)
             let s = c.read()!
@@ -93,11 +94,11 @@ class NonSelectableChannelTests : XCTestCase {
         while !done {
             sleep(1)
         }
-        XCTAssertEqual("hello there", msg.s )
+        XCTAssertEqual("hello there", msg.s)
 
         // want to know that time t2 ~= readTime and about 3 seconds later than t1
-        XCTAssertTrue(  abs(TimeoutState.differenceInUSec(t2, readTime)) < 1000)
-        XCTAssertTrue(  TimeoutState.differenceInUSec(readTime, t1) > 2900000)
+        XCTAssertTrue(abs(TimeoutState.differenceInUSec(t2, readTime)) < 1000)
+        XCTAssertTrue(TimeoutState.differenceInUSec(readTime, t1) > 2900000)
     }
 
 
@@ -124,9 +125,10 @@ class NonSelectableChannelTests : XCTestCase {
 
     func testFull() throws {
 
-        let c = NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max:10)))
+        let c = NonSelectableChannel(store: AnyStore(LinkedListQueue<String>(max: 10)))
 
         let l1 = try CountdownLatch2(1)
+
         func dm() -> Void {
             l1.countDown()
         }
@@ -138,7 +140,7 @@ class NonSelectableChannelTests : XCTestCase {
                 let x = c.read()
                 cnt += 1
                 l2.countDown()
-            } while cnt<100
+            } while cnt < 100
         }
         let reader = ThreadContext(name: "reader", destroyMe: dm, execute: r)
         XCTAssertEqual(0, reader.start())
@@ -157,14 +159,14 @@ class NonSelectableChannelTests : XCTestCase {
         XCTAssertEqual(0, l1.get())
     }
 
-    public func testApproachToClose() throws  {
+    public func testApproachToClose() throws {
         let latch = CountdownLatch(1)
         let c = ChannelFactory.AsAny.LLQ(max: 10).create(t: Int.self)
         var sum = 0
         let tc = ThreadContext(name: "foo") {
             while true {
                 if let x = c.read() {
-                    sum+=x
+                    sum += x
                 } else {
                     latch.countDown()
                     return
@@ -181,17 +183,17 @@ class NonSelectableChannelTests : XCTestCase {
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
         latch.await(&timeoutAt)
         XCTAssertEqual(0, latch.get())
-        XCTAssertEqual((1+10)*10/2, sum)
+        XCTAssertEqual((1 + 10) * 10 / 2, sum)
     }
 
-    public func testJoins() throws  {
+    public func testJoins() throws {
         let c = ChannelFactory.AsAny.LLQ(max: 100, writeLock: NonFairLock(1),
                 readLock: NonFairLock(1000)).create(t: Int.self)
-        var readers:[ThreadContext] = []
+        var readers: [ThreadContext] = []
         let writer = ThreadContext(name: "writer") {
             var r = SystemRandomNumberGenerator()
             while true {
-                c.write(Int(r.next()%100000))
+                c.write(Int(r.next() % 100000))
                 usleep(100)
             }
         }
@@ -200,10 +202,10 @@ class NonSelectableChannelTests : XCTestCase {
             let reader = ThreadContext(name: "reader\(i)") {
                 while true {
                     if let x = c.read() {
-                        if x%7 == 0 {
+                        if x % 7 == 0 {
                             return
                         } else {
-                           //  print("still going: \(ThreadContext.currentContext().name)")
+                            //  print("still going: \(ThreadContext.currentContext().name)")
                         }
                     } else {
                         // print("done with:\(ThreadContext.currentContext().name)")
@@ -216,7 +218,7 @@ class NonSelectableChannelTests : XCTestCase {
         }
         for reader in readers {
             var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 10000)
-            if  reader.join(&timeoutAt) != 0 {
+            if reader.join(&timeoutAt) != 0 {
                 XCTFail("should not get here, should have joined")
             }
         }
@@ -225,7 +227,7 @@ class NonSelectableChannelTests : XCTestCase {
         }
     }
 
-    public func testCloseSingleReader() throws  {
+    public func testCloseSingleReader() throws {
         let latch = CountdownLatch(1)
         let c = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
         let writer = ThreadContext(name: "writer") {
@@ -257,7 +259,7 @@ class NonSelectableChannelTests : XCTestCase {
         XCTAssertEqual(100, cnt)
     }
 
-    public func testClose500Readers() throws  {
+    public func testClose500Readers() throws {
         let latch = CountdownLatch(1)
         let c = ChannelFactory.AsAny.LLQ(max: 10,
                 writeLock: NonFairLock(1), readLock: NonFairLock(1000)).create(t: String.self)
@@ -287,7 +289,7 @@ class NonSelectableChannelTests : XCTestCase {
             }
             reader.start()
             readers.append(reader)
-            i+=1
+            i += 1
         }
         latch.countDown()
 
@@ -304,9 +306,10 @@ class NonSelectableChannelTests : XCTestCase {
         ("testFull", testFull),
         ("testSingleValueStoreViaLLQ", testSingleValueStoreViaLLQ),
         ("testSingleValueStore", testSingleValueStore),
+        ("testCloseSingleReader", testCloseSingleReader),
+        ("testClose500Readers", testClose500Readers)
     ]
 }
-
 
 
 /*
