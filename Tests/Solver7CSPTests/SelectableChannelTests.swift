@@ -156,6 +156,83 @@ class SelectableChannelTests : XCTestCase {
 
     }
 
+    public func testClose() throws  {
+
+        let ch1 = ChannelFactory.AsSelectable.SLLQ(id: "ch1", max: 10).create(t: Int.self)
+        let ch2 = ChannelFactory.AsSelectable.SLLQ(id: "ch2", max: 10).create(t: String.self)
+        let ch3 = ChannelFactory.AsSelectable.SLLQ(id: "ch3", max: 10).create(t: Double.self)
+
+        var cnt = 0
+        ch1.setHandler { ()->Void in
+            if let x = ch1.read() {
+                cnt += x
+            } else {
+                ch1.disable()
+            }
+        }
+        var cnt2 = 0
+        ch2.setHandler { ()->Void in
+            if let x = ch2.read() {
+                cnt2+=1
+            } else {
+                ch2.disable()
+            }
+        }
+        var sum = 0.0
+        ch3.setHandler {
+            if let x = ch3.read() {
+                sum+=x
+            } else {
+                ch3.disable()
+            }
+        }
+        let latch = CountdownLatch(1)
+        let timeout = Timeout<Any>(id:"myTimeout")
+        timeout.setTimeout(TimeoutState.computeTimeoutTimespec(millis: 1000))
+        timeout.setHandler {
+            let val = timeout.read()
+            latch.countDown()
+        }
+        var selectables = [Selectable]()
+        selectables.append(ch1)
+        selectables.append(ch2)
+        selectables.append(ch3)
+        selectables.append(timeout)
+
+        let fs = try FairSelector(selectables)
+
+        let p = ThreadContext(name: "processor") {
+            while true {
+                let selected = fs.select()
+                selected.handle()
+            }
+        }
+        p.start()
+
+        ch1.write(88)
+        ch2.write("howdy")
+        ch3.write(11.39)
+
+        ch1.close()
+        ch2.close()
+        ch3.write(3939.319)
+
+        ch3.close()
+
+        ch1.write(99)
+        ch2.write("won't make it")
+        ch3.write(-10000.30)
+
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        latch.await(&timeoutAt)
+        XCTAssertEqual(0, latch.get())
+
+        XCTAssertEqual(88, cnt)
+        XCTAssertEqual(1, cnt2)
+        XCTAssertEqual(3950.709, sum)
+
+    }
+
     static var allTests = [
         ("testWithTimers", testWithTimers),
         ("testFoo", testFoo),

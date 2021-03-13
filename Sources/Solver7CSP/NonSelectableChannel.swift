@@ -55,7 +55,6 @@ public class NonSelectableChannel<T>: Channel {
         }
     }
 
-
     public func read() -> T? {
         let o: T?
         let c: Int
