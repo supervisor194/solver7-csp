@@ -6,7 +6,17 @@ Communicating Sequential Processes, [Wikipedia-CSP][1], patterns can be found in
 Clojure, but are not natively present in the Swift programming language.  Swift uses Grand Central Dispatch, [Apple GCD][2], for 
 solving concurrency problems. However, if one would like a different, or perhaps better separation of specialized producers
 and consumers, CSP may be a way to go.  This shifts the focus towards the composition of independently executing
-processes (writers/readers or producers/consumers) that coordinate via messages transferred between channels.
+processes (writers/readers or producers/consumers) that coordinate via messages transferred between channels. Some
+examples where CSP may be a better abstraction are stream processing and time series analysis.  One often combines
+multiple streams to perform an operation like perhaps addition:
+```
+    let x = stream1.read()
+    let y = stream2.read()
+    if x.key == y.key {
+       z = x + y
+       output.write(z)
+    }
+```
 
 In CSP, the fundamental concept is a Channel. The Channel is a synchronization point for multiple threads of control,
 including both writers and readers. The Channel is a rendezvous point for two or more threads wishing to communicate. 

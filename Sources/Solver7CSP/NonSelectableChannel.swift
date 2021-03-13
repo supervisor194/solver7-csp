@@ -24,6 +24,17 @@ public class NonSelectableChannel<T>: Channel {
         notEmpty = readLock.createCondition()
     }
 
+    public func close() {
+        writeLock.lock()
+        readLock.lock()
+        defer {
+            readLock.unlock()
+            writeLock.unlock()
+        }
+        s = AnyStore<T>(HaltingStore(original: s))
+        notEmpty.doNotifyAll()
+    }
+
     public func write(_ item: T?) {
         writeLock.lock();
         defer {
@@ -55,7 +66,6 @@ public class NonSelectableChannel<T>: Channel {
             }
             while s.count == 0 {
                 notEmpty.doWait()
-
             }
             o = s.get()
             c = s.count

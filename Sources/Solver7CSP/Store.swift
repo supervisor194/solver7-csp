@@ -32,7 +32,7 @@ public protocol Store: class {
 
     func put(_ item: Item?) -> Int
 
-    func putForNode(_ item: Item?) -> (Int, U: StoreNode)
+    func putForNode(_ item: Item?) -> (Int, U: StoreNode?)
 
     func get() -> Item?
 
@@ -104,9 +104,9 @@ public class AnyStore<T>: Store {
         _put(item)
     }
 
-    private let _putForNode: (_ item: T?) -> (Int, U: StoreNode)
+    private let _putForNode: (_ item: T?) -> (Int, U: StoreNode?)
 
-    public func putForNode(_ item: T?) -> (Int, U: StoreNode) {
+    public func putForNode(_ item: T?) -> (Int, U: StoreNode?) {
         _putForNode(item)
     }
 

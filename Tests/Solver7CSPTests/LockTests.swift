@@ -152,6 +152,35 @@ class LockTests: XCTestCase {
         XCTAssertEqual(0, xyz)
     }
 
+    public func testNotifyAll() throws {
+        ThreadContext.currentContext().name = "foo"
+        let lock = NonFairLock(100)
+        let condition = lock.createCondition()
+        let latch0 = CountdownLatch(50, 50)
+        let latch = CountdownLatch(50, 50)
+        for i in 1...50 {
+            let tc = ThreadContext(name: "tc:\(i)") {
+                lock.lock()
+                latch0.countDown()
+                condition.doWait()
+                lock.unlock()
+                latch.countDown()
+                print("done with tc:\(i)")
+            }
+            tc.start()
+        }
+        sleep(1)
+        lock.lock()
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        latch0.await(&timeoutAt)
+        XCTAssertEqual(0, latch0.get())
+        condition.doNotifyAll()
+        lock.unlock()
+        timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        latch.await(&timeoutAt)
+        XCTAssertEqual(0, latch.get())
+    }
+
 
     public func testConditions() throws  {
         var lock = NonFairLock(10)

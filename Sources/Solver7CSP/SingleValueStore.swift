@@ -6,7 +6,7 @@ final class SingleValueStore<T: Equatable>: Store {
         fatalError("need to implement")
     }
 
-    func putForNode(_ item: T?) -> (Int, U: StoreNode) {
+    func putForNode(_ item: T?) -> (Int, U: StoreNode?) {
         fatalError("putForNode(_:) has not been implemented")
     }
 

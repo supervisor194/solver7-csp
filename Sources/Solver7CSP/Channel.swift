@@ -10,6 +10,7 @@ public protocol ReadableChannel {
 public protocol WritableChannel {
     associatedtype Item
     func write(_ item: Item?)
+    func close()
 }
 
 
@@ -43,6 +44,12 @@ public class AnyChannel<T>: Channel {
         _write(item)
     }
 
+    private let _close: () -> Void
+
+    public func close() -> Void {
+        _close()
+    }
+
     private let _isSelectable: Bool
 
     public func isSelectable() -> Bool {
@@ -66,6 +73,7 @@ public class AnyChannel<T>: Channel {
         _readAvailable = c.read
         _numAvailable = c.numAvailable
         _write = c.write
+        _close = c.close
     }
 
 }

@@ -30,7 +30,7 @@ public class CountdownLatch {
             defer {
                 l.unlock()
             }
-            c.doNotify()
+            c.doNotifyAll()
         }
     }
 
@@ -40,7 +40,7 @@ public class CountdownLatch {
             defer {
                 l.unlock()
             }
-            c.doNotify()
+            c.doNotifyAll()
         }
     }
 

@@ -1,6 +1,6 @@
 import XCTest
 @testable import Solver7CSP
-
+import Atomics
 import Foundation
 
 class NonSelectableChannelTests : XCTestCase {
@@ -155,6 +155,147 @@ class NonSelectableChannelTests : XCTestCase {
 
         l1.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
         XCTAssertEqual(0, l1.get())
+    }
+
+    public func testApproachToClose() throws  {
+        let latch = CountdownLatch(1)
+        let c = ChannelFactory.AsAny.LLQ(max: 10).create(t: Int.self)
+        var sum = 0
+        let tc = ThreadContext(name: "foo") {
+            while true {
+                if let x = c.read() {
+                    sum+=x
+                } else {
+                    latch.countDown()
+                    return
+                }
+            }
+        }
+        tc.start()
+
+        for i in 1...10 {
+            c.write(i)
+        }
+        c.write(nil)
+
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        latch.await(&timeoutAt)
+        XCTAssertEqual(0, latch.get())
+        XCTAssertEqual((1+10)*10/2, sum)
+    }
+
+    public func testJoins() throws  {
+        let c = ChannelFactory.AsAny.LLQ(max: 100, writeLock: NonFairLock(1),
+                readLock: NonFairLock(1000)).create(t: Int.self)
+        var readers:[ThreadContext] = []
+        let writer = ThreadContext(name: "writer") {
+            var r = SystemRandomNumberGenerator()
+            while true {
+                c.write(Int(r.next()%100000))
+                usleep(100)
+            }
+        }
+        writer.start()
+        for i in 1...1000 {
+            let reader = ThreadContext(name: "reader\(i)") {
+                while true {
+                    if let x = c.read() {
+                        if x%7 == 0 {
+                            return
+                        } else {
+                           //  print("still going: \(ThreadContext.currentContext().name)")
+                        }
+                    } else {
+                        // print("done with:\(ThreadContext.currentContext().name)")
+                        return
+                    }
+                }
+            }
+            reader.start()
+            readers.append(reader)
+        }
+        for reader in readers {
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 10000)
+            if  reader.join(&timeoutAt) != 0 {
+                XCTFail("should not get here, should have joined")
+            }
+        }
+        for reader in readers {
+            XCTAssertEqual(ThreadContext.ENDED, reader.state)
+        }
+    }
+
+    public func testCloseSingleReader() throws  {
+        let latch = CountdownLatch(1)
+        let c = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
+        let writer = ThreadContext(name: "writer") {
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+            latch.await(&timeoutAt)
+            XCTAssertEqual(0, latch.get())
+            for i in 1...100 {
+                c.write("howdy doody: \(i)")
+            }
+            c.close()
+        }
+        writer.start()
+        var cnt = 0
+        let reader = ThreadContext(name: "reader") {
+            while true {
+                if let s = c.read() {
+                    cnt += 1
+                } else {
+                    return
+                }
+            }
+        }
+        reader.start()
+        latch.countDown()
+
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+        reader.join(&timeoutAt)
+        XCTAssertEqual(0, reader.join(&timeoutAt))
+        XCTAssertEqual(100, cnt)
+    }
+
+    public func testClose500Readers() throws  {
+        let latch = CountdownLatch(1)
+        let c = ChannelFactory.AsAny.LLQ(max: 10,
+                writeLock: NonFairLock(1), readLock: NonFairLock(1000)).create(t: String.self)
+        let writer = ThreadContext(name: "writer") {
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 10000)
+            latch.await(&timeoutAt)
+            XCTAssertEqual(0, latch.get())
+            for i in 1...487 {
+                c.write("howdy doody: \(i)")
+            }
+            c.close()
+        }
+        writer.start()
+
+        var readers: [ThreadContext] = []
+        var cnt = ManagedAtomic<Int>(0)
+        var i = 0
+        while i < 500 {
+            let reader = ThreadContext(name: "reader\(i)") {
+                while true {
+                    if let s = c.read() {
+                        let cnt = cnt.wrappingIncrementThenLoad(ordering: .relaxed)
+                    } else {
+                        return
+                    }
+                }
+            }
+            reader.start()
+            readers.append(reader)
+            i+=1
+        }
+        latch.countDown()
+
+        for reader in readers {
+            var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
+            XCTAssertEqual(0, reader.join(&timeoutAt))
+        }
+        XCTAssertEqual(487, cnt.load(ordering: .relaxed))
     }
 
 

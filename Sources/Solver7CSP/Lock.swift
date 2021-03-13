@@ -98,6 +98,12 @@ public class Condition {
         }
     }
 
+    public func doNotifyAll() {
+        while !waiterQ.isEmpty() {
+            doNotify()
+        }
+    }
+
 }
 
 

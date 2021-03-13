@@ -34,7 +34,7 @@ class LinkedListQueue<T: Equatable>: QueueStore {
         enqueue(value: item)
     }
 
-    func putForNode(_ item: T?) -> (Int, U: StoreNode) {
+    func putForNode(_ item: T?) -> (Int, U: StoreNode?) {
         enqueueForNode(value: item)
     }
 
