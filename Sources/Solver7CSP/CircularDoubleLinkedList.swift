@@ -48,7 +48,7 @@ class CircularDoubleLinkedList<T> {
         }
     }
 
-    func find(finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
+    func find(finder: (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
         find(beginAt: head, finder: finder)
     }
 
@@ -62,7 +62,7 @@ class CircularDoubleLinkedList<T> {
         return nil
     }
 
-    func find(beginAt: CDLLNode<T>?, finder: @escaping (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
+    func find(beginAt: CDLLNode<T>?, finder: (_ node: CDLLNode<T>) -> CDLLNode<T>?) -> CDLLNode<T>? {
         if let startAt = startAt(beginAt: beginAt) {
             var node = startAt
             repeat {

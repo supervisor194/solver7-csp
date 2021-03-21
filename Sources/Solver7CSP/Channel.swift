@@ -1,5 +1,12 @@
 import Foundation
 
+
+public protocol Closeable {
+    func getId() -> String
+    func close()
+    func isEmpty() -> Bool
+}
+
 public protocol ReadableChannel {
     associatedtype Item
     func read() -> Item?
@@ -10,15 +17,21 @@ public protocol ReadableChannel {
 public protocol WritableChannel {
     associatedtype Item
     func write(_ item: Item?)
-    func close()
 }
 
 
-public protocol Channel: ReadableChannel, WritableChannel {
+public protocol Channel: ReadableChannel, WritableChannel, Closeable {
 }
 
 public class AnyChannel<T>: Channel {
+
     public typealias Item = T
+
+    private let _id : () -> String
+
+    public func getId() -> String {
+        _id()
+    }
 
     private let _read: () -> T?
 
@@ -50,6 +63,13 @@ public class AnyChannel<T>: Channel {
         _close()
     }
 
+    private let _isEmpty: () -> Bool
+
+    public func isEmpty() -> Bool  {
+        _isEmpty()
+    }
+
+
     private let _isSelectable: Bool
 
     public func isSelectable() -> Bool {
@@ -69,11 +89,13 @@ public class AnyChannel<T>: Channel {
         } else {
             _selectable = nil
         }
+        _id = c.getId
         _read = c.read
         _readAvailable = c.read
         _numAvailable = c.numAvailable
         _write = c.write
         _close = c.close
+        _isEmpty = c.isEmpty
     }
 
 }

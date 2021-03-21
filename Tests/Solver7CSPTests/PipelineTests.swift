@@ -7,6 +7,98 @@ import Atomics
 
 class PipelineTests: XCTestCase {
 
+    public func testStage() throws {
+
+        let ch1 = ChannelFactory.AsAny.LLQ(id: "ch1", max: 10).create(t: String.self)
+        let ch2 = ChannelFactory.AsAny.LLQ(id: "ch2", max: 10).create(t: String.self)
+        let ch3 = ChannelFactory.AsAny.LLQ(id: "ch3", max: 10).create(t: String.self)
+        let ch4 = ChannelFactory.AsAny.LLQ(id: "ch4", max: 10).create(t: String.self)
+
+        let stage0TC = ThreadContext(name: "stage0") {
+            ch1.write("hello1")
+            ch1.write("skip")
+            ch1.write("hello2")
+            // todo: loop over ch and close if none present
+            print("stage0 done")
+        }
+        let stage0 = Stage(name: "stage0", inputs: [], outputs: [ch1], tc: stage0TC)
+        stage0TC.start()
+
+        let stage1TC = ThreadContext(name: "stage1") {
+            while true {
+                if let x = ch1.read() {
+                    if x == "skip" {
+                        ch3.write(x + " skipped")
+                    } else {
+                        ch2.write(x + " added by stage1")
+                    }
+                } else {
+                    print("stage1 done")
+                    return
+                }
+            }
+        }
+        let stage1 = Stage(name: "stage1", inputs: [ch1, ch4], outputs: [ch2,ch3], tc: stage1TC)
+        stage1TC.start()
+
+        let stage2TC = ThreadContext(name: "stage2") {
+            while true {
+                if let x = ch2.read() {
+                    ch3.write(x + " added by stage2")
+                } else {
+                    print("stage2 done")
+                    return
+                }
+            }
+        }
+        let stage2 = Stage(name: "stage2", inputs: [ch2], outputs: [ch3], tc: stage2TC)
+        stage2TC.start()
+        let stage3TC = ThreadContext(name: "stage3") {
+            while true {
+                if let x = ch3.read() {
+                    ch4.write(x)
+                    print("stage3 read: " + x)
+                } else {
+                    print("stage3 done")
+                    return
+                }
+            }
+        }
+        let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [], tc: stage3TC)
+        stage3TC.start()
+
+        let stage4TC = ThreadContext(name: "stage4") {
+            while true {
+                if let x = ch4.read() {
+                    print("final x")
+                } else {
+                    print ("stage4 done")
+                    return
+                }
+            }
+        }
+        let stage4 = Stage(name: "stage4", inputs: [ch4], outputs: [ch1], tc: stage4TC)
+        stage4TC.start()
+
+        let pipeline = Pipeline()
+
+        pipeline.add(stage: stage1)
+        pipeline.add(stage: stage3)
+        pipeline.add(stage: stage2)
+        pipeline.add(stage: stage0)
+        pipeline.add(stage: stage4)
+
+        pipeline.build()
+        pipeline.sortTopologically()
+        pipeline.showTopologicalOrder()
+
+
+        var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 100000)
+        let closeResult = pipeline.close(timeoutAt: &timeoutAt)
+        XCTAssertEqual(0, closeResult)
+
+    }
+
     public func testManyWritersManyReaders() throws {
         // W writers for N*W msgs --> 2*W channels --> W selectable readers/writers -->
         //     2 channels --> 2 readers/writers --> 1 channel --> 1 reader --> cnt == N*W

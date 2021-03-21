@@ -2,18 +2,12 @@ import Foundation
 
 public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable {
 
-    private let id: String
     private var handler: (() -> Void)? = nil
     private var _enableable: Bool = false
     private var _selector: Selector? = nil
 
     public init(id: String, store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
-        self.id = id
-        super.init(store: store, writeLock: writeLock, readLock: readLock)
-    }
-
-    public func getId() -> String {
-        id
+        super.init(id: id, store: store, writeLock: writeLock, readLock: readLock)
     }
 
     public func isEnableable() -> Bool {

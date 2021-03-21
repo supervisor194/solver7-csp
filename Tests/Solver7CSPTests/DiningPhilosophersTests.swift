@@ -85,7 +85,7 @@ class Philosopher {
         myChopstick.read()
         otherChopstick.read()
 
-        print("\(id) has two chopsticks, dinging on meal: \(11 - mealsToEat) of 10")
+        print("\(id) has two chopsticks, dining on meal: \(11 - mealsToEat) of 10")
         mealsToEat -= 1
         Philosopher._pause()
 

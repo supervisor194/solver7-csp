@@ -300,6 +300,78 @@ class NonSelectableChannelTests: XCTestCase {
         XCTAssertEqual(487, cnt.load(ordering: .relaxed))
     }
 
+    /*
+    public func testAsync() throws  {
+
+
+        s1 = createStage( inputs("ch1"), outputs("ch2", "ch4"))  {  (ch1,ch2,ch4)->Void in {
+            if let url = ch1.read() {
+                do {
+                if let response = try process(url)  {
+                    ch2.write(response)
+                    return true
+                } catch {
+                        ch4.write("problems with request to \(url)")
+                    }
+                }
+            } else {
+                return false
+            }
+        }
+
+        pipeline = createPipeline(s1,s2,s3,s4)
+        let stage1 = createStage( inputChannel, ) {
+            if let response = client.makeRequest(input) {
+                processHttpResponse.write(response)
+            } else {
+                completion.write("Error with \(input)")
+            }
+
+        }
+
+
+        let ch1 = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
+        let ch2 = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
+        let ch3 = ChannelFactory.AsAny.LLQ(max: 10).create(t: String.self)
+
+        let ch1Reader = ThreadContext("ch1Reader") {
+            while true {
+                if let input = ch1.read() {
+                    if let response = client.makeRequest(input) {
+                        ch2.write(response)
+                    } else {
+                        ch3.write()
+                    }
+                } else {
+                    return
+                }
+            }
+        }
+
+        let ch2Reader = ThreadContext("ch2Reader") {
+            while true {
+                if let data =
+            }
+        }
+
+
+
+        myJob(input, completionHandler) {
+
+            data = client.call(input)
+
+            resultB = processData(data)
+
+            resultC = processAgain(resultB)
+
+            finalResult = completeJob(resultC)
+        }
+
+
+
+    }
+     */
+
 
     static var allTests = [
         ("testFoo", testFoo),

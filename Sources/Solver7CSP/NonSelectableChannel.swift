@@ -2,8 +2,9 @@ import Foundation
 
 public class NonSelectableChannel<T>: Channel {
 
-    public typealias Item = T // todo: remove ?
+    public typealias Item = T
 
+    let id: String
     let capacity: Int
     let capacityMinus1: Int
     let capacityMinus2: Int
@@ -14,7 +15,12 @@ public class NonSelectableChannel<T>: Channel {
 
     var s: AnyStore<T>
 
-    public init(store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
+    public init(id: String? = nil, store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
+        if let theId = id {
+            self.id = theId
+        } else {
+            self.id = UUID.init().uuidString
+        }
         s = store
         capacity = store.max
         capacityMinus1 = capacity - 1
@@ -22,6 +28,14 @@ public class NonSelectableChannel<T>: Channel {
         self.writeLock = writeLock
         self.readLock = readLock
         notEmpty = readLock.createCondition()
+    }
+
+    public func getId() -> String {
+        id
+    }
+
+    public func isEmpty() -> Bool {
+        s.isEmpty()
     }
 
     public func close() {

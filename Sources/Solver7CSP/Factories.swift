@@ -10,24 +10,24 @@ public protocol SelectableChannelCreator {
 }
 
 
-public enum ChannelFactory {
+public class ChannelFactory {
 }
 
 public extension ChannelFactory {
 
     enum AsAny: ChannelCreator {
-        case LLQ(max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
-        case SVS(writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
+        case LLQ(id: String? = nil, max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
+        case SVS(id: String? = nil, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
         case SLLQ(id: String, max: Int, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
         case SSVS(id: String, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10))
 
         public func create<T: Equatable>(t: T.Type) -> AnyChannel<T> {
             switch self {
-            case let .LLQ(max, writeLock, readLock):
-                return AnyChannel(NonSelectableChannel(store: AnyStore(LinkedListQueue<T>(max: max)),
+            case let .LLQ(id, max, writeLock, readLock):
+                return AnyChannel(NonSelectableChannel(id: id, store: AnyStore(LinkedListQueue<T>(max: max)),
                         writeLock: writeLock, readLock: readLock))
-            case let .SVS(writeLock, readLock):
-                return AnyChannel(NonSelectableChannel(store: AnyStore(SingleValueStore<T>()),
+            case let .SVS(id, writeLock, readLock):
+                return AnyChannel(NonSelectableChannel(id: id, store: AnyStore(SingleValueStore<T>()),
                         writeLock: writeLock, readLock: readLock))
             case let .SLLQ(id, max, writeLock, readLock):
                 return AnyChannel(SelectableChannel(id: id, store: AnyStore(LinkedListQueue<T>(max: max)),

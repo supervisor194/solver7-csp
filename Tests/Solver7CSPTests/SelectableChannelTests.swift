@@ -236,6 +236,7 @@ class SelectableChannelTests : XCTestCase {
     static var allTests = [
         ("testWithTimers", testWithTimers),
         ("testFoo", testFoo),
+        ("testClose", testClose),
     ]
 
 
