@@ -42,6 +42,8 @@ public class Pipeline {
 
     var vertices: [String:StageVertex] = [:]
 
+    var tops: [StageVertex] = []
+
     var chReaders: [String: StageVertexArray] = [:]
     var chWriters: [String: StageVertexArray] = [:]
 
@@ -77,10 +79,14 @@ public class Pipeline {
             writers.add(stageVertex)
             chWriters[ch.getId()] = writers
         }
-        for ch in stage.inputs {
-            var readers = chReaders[ch.getId(), default: StageVertexArray()]
-            readers.add(stageVertex)
-            chReaders[ch.getId()] = readers
+        if stage.inputs.count > 0 {
+            for ch in stage.inputs {
+                var readers = chReaders[ch.getId(), default: StageVertexArray()]
+                readers.add(stageVertex)
+                chReaders[ch.getId()] = readers
+            }
+        } else {
+            tops.append(stageVertex)
         }
 
     }
@@ -95,7 +101,7 @@ public class Pipeline {
             if let readers = chReaders[name] {
                 for writer in writers.value.stages {
                     for reader in readers.stages {
-                        var edge = StageEdge(channelName: name, from: writer, to: reader)
+                        let edge = StageEdge(channelName: name, from: writer, to: reader)
                         writer.addOutput(edge)
                         reader.addInput(edge)
                     }
@@ -110,12 +116,51 @@ public class Pipeline {
     }
 
     func copyVertices() -> [String:StageVertex] {
-        var pipeline = Pipeline()
+        let pipeline = Pipeline()
         for stage in stages.values {
             pipeline.add(stage: stage)
         }
         pipeline.build()
         return pipeline.vertices
+    }
+
+    private var visited : [String:StageVertex] = [:]
+    private var color : [String:Color] = [:]
+
+    public func dfs(callback: @escaping (_ v: StageVertex)->Bool, detectCycle: Bool = false) throws {
+        visited.removeAll()
+        color.removeAll()
+        for top in tops {
+            try dfs(vertex: top, callback: callback, detectCycle: detectCycle)
+        }
+    }
+
+    public enum CycleError : Error {
+        case found
+    }
+
+    enum Color {
+        case white, gray, black
+    }
+
+    func dfs(vertex: StageVertex,callback: (_ v:StageVertex)->Bool, detectCycle: Bool ) throws -> Bool {
+        visited[vertex.name] = vertex
+        if let currentColor = color[vertex.name] {
+            if detectCycle && currentColor==Color.gray {
+                throw CycleError.found
+            }
+        }
+        color[vertex.name] = Color.gray
+        for edge in vertex.outputs.values {
+            if visited[edge.to.name] == nil {
+                let c = try dfs(vertex: edge.to, callback: callback, detectCycle: detectCycle)
+                if c == false {
+                    return false
+                }
+            }
+        }
+        color[vertex.name] = Color.black
+        return callback(vertex)
     }
 
     public func sortTopologically() {
@@ -162,7 +207,7 @@ public class Pipeline {
 }
 
 
-class StageVertex : Hashable {
+public class StageVertex : Hashable {
 
     let name: String
     var inputs: [String:StageEdge] = [:]
@@ -184,17 +229,17 @@ class StageVertex : Hashable {
         inputs.removeValue(forKey: toFind.key) != nil
     }
 
-    static func ==(lhs: StageVertex, rhs: StageVertex) -> Bool {
+    public static func ==(lhs: StageVertex, rhs: StageVertex) -> Bool {
         lhs === rhs
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }
 
 }
 
-class StageEdge {
+public class StageEdge {
     let channelName: String
 
     let from : StageVertex

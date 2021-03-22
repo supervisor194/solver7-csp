@@ -38,7 +38,7 @@ class PipelineTests: XCTestCase {
                 }
             }
         }
-        let stage1 = Stage(name: "stage1", inputs: [ch1, ch4], outputs: [ch2,ch3], tc: stage1TC)
+        let stage1 = Stage(name: "stage1", inputs: [ch1], outputs: [ch2,ch3], tc: stage1TC)
         stage1TC.start()
 
         let stage2TC = ThreadContext(name: "stage2") {
@@ -64,7 +64,7 @@ class PipelineTests: XCTestCase {
                 }
             }
         }
-        let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [], tc: stage3TC)
+        let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [ch4], tc: stage3TC)
         stage3TC.start()
 
         let stage4TC = ThreadContext(name: "stage4") {
@@ -77,7 +77,7 @@ class PipelineTests: XCTestCase {
                 }
             }
         }
-        let stage4 = Stage(name: "stage4", inputs: [ch4], outputs: [ch1], tc: stage4TC)
+        let stage4 = Stage(name: "stage4", inputs: [ch4], outputs: [], tc: stage4TC)
         stage4TC.start()
 
         let pipeline = Pipeline()
@@ -90,7 +90,20 @@ class PipelineTests: XCTestCase {
 
         pipeline.build()
         pipeline.sortTopologically()
+        print("-----")
         pipeline.showTopologicalOrder()
+        print("-----")
+
+        var to : [String] = []
+        try pipeline.dfs(callback: { (v) -> Bool in
+            to.append(v.name)
+            return true
+        }, detectCycle: true)
+
+        for s in to.reversed() {
+            print(s)
+        }
+        print("-----")
 
 
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 100000)
