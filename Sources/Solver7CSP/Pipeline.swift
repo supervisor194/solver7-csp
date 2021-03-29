@@ -75,13 +75,13 @@ public class Pipeline {
         let stageVertex = StageVertex(name: stage.name)
         vertices[stageVertex.name] = stageVertex
         for ch in stage.outputs {
-            var writers = chWriters[ch.getId(), default: StageVertexArray()]
+            let writers = chWriters[ch.getId(), default: StageVertexArray()]
             writers.add(stageVertex)
             chWriters[ch.getId()] = writers
         }
         if stage.inputs.count > 0 {
             for ch in stage.inputs {
-                var readers = chReaders[ch.getId(), default: StageVertexArray()]
+                let readers = chReaders[ch.getId(), default: StageVertexArray()]
                 readers.add(stageVertex)
                 chReaders[ch.getId()] = readers
             }
@@ -110,9 +110,6 @@ public class Pipeline {
                 fatalError("Can't have this")
             }
         }
-
-        // for each ch in chLeft map to each  chRight for ch
-        // go through all the chLefts and chRights for each ch and cross product for all edges
     }
 
     func copyVertices() -> [String:StageVertex] {
@@ -127,7 +124,7 @@ public class Pipeline {
     private var visited : [String:StageVertex] = [:]
     private var color : [String:Color] = [:]
 
-    public func dfs(callback: @escaping (_ v: StageVertex)->Bool, detectCycle: Bool = false) throws {
+    public func dfs(callback: @escaping (_ v: StageVertex)->Bool, detectCycle: Bool = true) throws {
         visited.removeAll()
         color.removeAll()
         for top in tops {

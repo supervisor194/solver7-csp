@@ -19,7 +19,7 @@ class PipelineTests: XCTestCase {
             ch1.write("skip")
             ch1.write("hello2")
             // todo: loop over ch and close if none present
-            print("stage0 done")
+            ch1.write("stage0 done")
         }
         let stage0 = Stage(name: "stage0", inputs: [], outputs: [ch1], tc: stage0TC)
         stage0TC.start()
@@ -33,12 +33,12 @@ class PipelineTests: XCTestCase {
                         ch2.write(x + " added by stage1")
                     }
                 } else {
-                    print("stage1 done")
+                    ch2.write("stage1 done")
                     return
                 }
             }
         }
-        let stage1 = Stage(name: "stage1", inputs: [ch1], outputs: [ch2,ch3], tc: stage1TC)
+        let stage1 = Stage(name: "stage1", inputs: [ch1], outputs: [ch2, ch4], tc: stage1TC)
         stage1TC.start()
 
         let stage2TC = ThreadContext(name: "stage2") {
@@ -46,7 +46,7 @@ class PipelineTests: XCTestCase {
                 if let x = ch2.read() {
                     ch3.write(x + " added by stage2")
                 } else {
-                    print("stage2 done")
+                    ch3.write("stage2 done")
                     return
                 }
             }
@@ -56,10 +56,9 @@ class PipelineTests: XCTestCase {
         let stage3TC = ThreadContext(name: "stage3") {
             while true {
                 if let x = ch3.read() {
-                    ch4.write(x)
-                    print("stage3 read: " + x)
+                    ch4.write(x + " added by stage3")
                 } else {
-                    print("stage3 done")
+                    ch4.write("stage3 done")
                     return
                 }
             }
@@ -67,12 +66,14 @@ class PipelineTests: XCTestCase {
         let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [ch4], tc: stage3TC)
         stage3TC.start()
 
+        var output: [String] = []
+
         let stage4TC = ThreadContext(name: "stage4") {
             while true {
                 if let x = ch4.read() {
-                    print("final x")
+                    output.append(x)
                 } else {
-                    print ("stage4 done")
+                    output.append("stage4 done")
                     return
                 }
             }
@@ -90,25 +91,40 @@ class PipelineTests: XCTestCase {
 
         pipeline.build()
         pipeline.sortTopologically()
-        print("-----")
-        pipeline.showTopologicalOrder()
-        print("-----")
 
-        var to : [String] = []
+        var to: [String] = []
         try pipeline.dfs(callback: { (v) -> Bool in
             to.append(v.name)
             return true
-        }, detectCycle: true)
+        })
 
+        var i = 0
         for s in to.reversed() {
-            print(s)
+            XCTAssertEqual(s, pipeline.topologicalOrder[i].name)
+            i += 1
         }
-        print("-----")
 
 
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 100000)
         let closeResult = pipeline.close(timeoutAt: &timeoutAt)
         XCTAssertEqual(0, closeResult)
+
+        let expected: [String] = [
+            "skip skipped added by stage3",
+            "hello1 added by stage1 added by stage2 added by stage3",
+            "hello2 added by stage1 added by stage2 added by stage3",
+            "stage0 done added by stage1 added by stage2 added by stage3",
+            "stage1 done added by stage2 added by stage3",
+            "stage2 done added by stage3",
+            "stage3 done",
+            "stage4 done",
+        ]
+
+        i = 0
+        for s in output {
+            XCTAssertEqual(expected[i], s)
+            i+=1
+        }
 
     }
 
