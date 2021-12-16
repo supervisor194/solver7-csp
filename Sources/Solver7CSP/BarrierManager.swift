@@ -8,16 +8,16 @@ public class BarrierManager {
     /*
      Workers write TokenRequest objects using this writer,  Underlying Channel:  Many Writers to 1 Reader
      */
-    let tokenRequestWriter: (TokenRequest) -> Void  // Workers are multiple writers
-    let tokenRequestReader: () -> TokenRequest    // BarrierManager is single reader
+    let tokenRequestWriter: (TokenRequest) throws -> Void  // Workers are multiple writers
+    let tokenRequestReader: () throws -> TokenRequest    // BarrierManager is single reader
 
     /*
      Workers write release requests (Int) using this writer, Underlying Channel: Many Writers to 1 Reader
      */
-    let tokenReleaseWriter: (Int) -> Void  // Workers are multiple writers
-    let tokenReleaseReader: () -> Int  // BarrierManager is single reader
+    let tokenReleaseWriter: (Int) throws -> Void  // Workers are multiple writers
+    let tokenReleaseReader: () throws -> Int  // BarrierManager is single reader
 
-    let workerPool : BarrierWorkerPool
+    let workerPool: BarrierWorkerPool
 
     public init(maxTokens: Int,
                 numWorkers: Int,
@@ -27,37 +27,41 @@ public class BarrierManager {
         self.maxTokens = maxTokens
         available = maxTokens
 
-        tokenRequestWriter = { (request) -> Void in
-            tokenRequestChannel.write(request)
+        tokenRequestWriter = { (request) throws -> Void in
+            try tokenRequestChannel.write(request)
         }
-        tokenRequestReader = { () -> TokenRequest in
-            tokenRequestChannel.read()!
+        tokenRequestReader = { () throws -> TokenRequest in
+            try tokenRequestChannel.read()!
         }
 
-        tokenReleaseWriter = { (release) -> Void in
-            tokenReleaseChannel.write(release)
+        tokenReleaseWriter = { (release) throws -> Void in
+            try tokenReleaseChannel.write(release)
         }
-        tokenReleaseReader = { () -> Int in
-            tokenReleaseChannel.read()!
+        tokenReleaseReader = { () throws -> Int in
+            try tokenReleaseChannel.read()!
         }
 
         workerPool = BarrierWorkerPool(numWorkers: numWorkers, taskQ: taskChannel,
-               tokenRequestWriter: tokenRequestWriter,
+                tokenRequestWriter: tokenRequestWriter,
                 tokenReleaseWriter: tokenReleaseWriter)
 
 
     }
 
     public func run() -> Void {
-        while true {
-            let request = tokenRequestReader()
-            let numRequested = request.num
-            while available < numRequested {
-                let released = tokenReleaseReader()
-                available += released
+        do {
+            while true {
+                let request = try tokenRequestReader()
+                let numRequested = request.num
+                while available < numRequested {
+                    let released = try tokenReleaseReader()
+                    available += released
+                }
+                try request.respond()
+                available -= numRequested
             }
-            request.respond()
-            available -= numRequested
+        } catch {
+
         }
     }
 }

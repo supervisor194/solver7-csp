@@ -36,8 +36,12 @@ public class CountdownLatch2 {
 
 
     private func handleC() -> Void {
-        let n = c.read()!
-        tokens = max(0, tokens - n)
+        do {
+            let n = try c.read()!
+            tokens = max(0, tokens - n)
+        } catch {
+            // error
+        }
     }
 
     private func handleT() -> Void {
@@ -64,12 +68,12 @@ public class CountdownLatch2 {
         }
     }
 
-    public func countDown() -> Void {
-        c.write(1)
+    public func countDown() throws -> Void {
+        try c.write(1)
     }
 
-    public func countDown(_ n: Int) -> Void {
-        c.write(n)
+    public func countDown(_ n: Int) throws -> Void {
+        try c.write(n)
     }
 
     public func get() -> Int {

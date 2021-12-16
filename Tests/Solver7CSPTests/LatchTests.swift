@@ -9,20 +9,32 @@ class LatchTests :XCTestCase  {
         let latch = try CountdownLatch2(1000)
 
         let r1 = { () -> Void in
-            for _ in 1...100 {
-                latch.countDown()
+            do {
+                for _ in 1...100 {
+                    try latch.countDown()
+                }
+            } catch {
+                XCTFail("problems with countdown")
             }
         }
 
         let r2 = { () -> Void in
-            for _ in 1...10 {
-                latch.countDown(50)
+            do {
+                for _ in 1...10 {
+                    try latch.countDown(50)
+                }
+            } catch {
+                XCTFail("problems with countdown")
             }
         }
 
         let r3 = { () -> Void in
-            for _ in 1...100 {
-                latch.countDown(4)
+            do {
+                for _ in 1...100 {
+                    try latch.countDown(4)
+                }
+            } catch {
+                XCTFail("problems with countdown")
             }
         }
 
@@ -48,7 +60,11 @@ class LatchTests :XCTestCase  {
 
         let r1 = { () -> Void in
             sleep(1)
-            latch.countDown(500)
+            do {
+                try latch.countDown(500)
+            } catch {
+                XCTFail("problems with countdown")
+            }
         }
         let tc = ThreadContext(name: "r1", execute: r1)
         XCTAssertEqual(0, tc.start())

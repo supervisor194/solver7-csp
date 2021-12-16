@@ -15,52 +15,69 @@ class PipelineTests: XCTestCase {
         let ch4 = ChannelFactory.AsAny.LLQ(id: "ch4", max: 10).create(t: String.self)
 
         let stage0TC = ThreadContext(name: "stage0") {
-            ch1.write("hello1")
-            ch1.write("skip")
-            ch1.write("hello2")
+         do {
+            try ch1.write("hello1")
+            try ch1.write("skip")
+            try ch1.write("hello2")
             // todo: loop over ch and close if none present
-            ch1.write("stage0 done")
+            try ch1.write("stage0 done")
+            } catch {
+                XCTFail("problems with writes")
+            }
+
         }
         let stage0 = Stage(name: "stage0", inputs: [], outputs: [ch1], tc: stage0TC)
         stage0TC.start()
 
         let stage1TC = ThreadContext(name: "stage1") {
-            while true {
-                if let x = ch1.read() {
-                    if x == "skip" {
-                        ch3.write(x + " skipped")
+            do {
+                while true {
+                    if let x = try ch1.read() {
+                        if x == "skip" {
+                            try ch3.write(x + " skipped")
+                        } else {
+                            try ch2.write(x + " added by stage1")
+                        }
                     } else {
-                        ch2.write(x + " added by stage1")
+                        try ch2.write("stage1 done")
+                        return
                     }
-                } else {
-                    ch2.write("stage1 done")
-                    return
                 }
+            } catch {
+                XCTFail("problems with relay")
             }
         }
         let stage1 = Stage(name: "stage1", inputs: [ch1], outputs: [ch2, ch4], tc: stage1TC)
         stage1TC.start()
 
         let stage2TC = ThreadContext(name: "stage2") {
-            while true {
-                if let x = ch2.read() {
-                    ch3.write(x + " added by stage2")
-                } else {
-                    ch3.write("stage2 done")
-                    return
+            do {
+                while true {
+                    if let x = try ch2.read() {
+                        try ch3.write(x + " added by stage2")
+                    } else {
+                        try ch3.write("stage2 done")
+                        return
+                    }
                 }
+            } catch {
+                XCTFail("problems with stage1")
             }
         }
         let stage2 = Stage(name: "stage2", inputs: [ch2], outputs: [ch3], tc: stage2TC)
         stage2TC.start()
         let stage3TC = ThreadContext(name: "stage3") {
-            while true {
-                if let x = ch3.read() {
-                    ch4.write(x + " added by stage3")
-                } else {
-                    ch4.write("stage3 done")
-                    return
+            do {
+                while true {
+                    if let x = try ch3.read() {
+                        try ch4.write(x + " added by stage3")
+                    } else {
+                        try ch4.write("stage3 done")
+                        return
+                    }
                 }
+            } catch {
+                XCTFail("problems with stage3TC")
             }
         }
         let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [ch4], tc: stage3TC)
@@ -69,13 +86,17 @@ class PipelineTests: XCTestCase {
         var output: [String] = []
 
         let stage4TC = ThreadContext(name: "stage4") {
-            while true {
-                if let x = ch4.read() {
-                    output.append(x)
-                } else {
-                    output.append("stage4 done")
-                    return
+            do {
+                while true {
+                    if let x = try ch4.read() {
+                        output.append(x)
+                    } else {
+                        output.append("stage4 done")
+                        return
+                    }
                 }
+            } catch {
+                XCTFail("problems with stage4TC")
             }
         }
         let stage4 = Stage(name: "stage4", inputs: [ch4], outputs: [], tc: stage4TC)
@@ -147,12 +168,16 @@ class PipelineTests: XCTestCase {
         for i in 1...W {
             let writer = ThreadContext(name: "initiator:\(i)") {
                 var x = 1
-                while x <= N {
-                    let ch = Int(rng.next() % UW2)
-                    level1Channels[ch].write(x)
-                    x += 1
+                do {
+                    while x <= N {
+                        let ch = Int(rng.next() % UW2)
+                        try level1Channels[ch].write(x)
+                        x += 1
+                    }
+                    l1.countDown()
+                } catch {
+                    XCTFail("problems with writer")
                 }
-                l1.countDown()
             }
             writer.start()
         }
@@ -166,10 +191,18 @@ class PipelineTests: XCTestCase {
                 let ch1 = level1Channels[(i - 1) * 2]
                 let ch2 = level1Channels[(i - 1) * 2 + 1]
                 ch1.setHandler() {
-                    io1.write(ch1.read())
+                    do {
+                        try io1.write(try ch1.read())
+                    } catch {
+                        XCTFail("problems with write/read")
+                    }
                 }
                 ch2.setHandler() {
-                    io2.write(ch2.read())
+                    do {
+                        try io2.write(try ch2.read())
+                    } catch {
+                        XCTFail("problems with ch2")
+                    }
                 }
                 selectables.append(ch1)
                 selectables.append(ch2)
@@ -191,17 +224,25 @@ class PipelineTests: XCTestCase {
 
         let output = ChannelFactory.AsAny.SVS().create(t: Int.self)
         let io1Reader = ThreadContext(name: "IO1Reader") {
-            while true {
-                let val = io1.read()
-                output.write(val)
+            do {
+                while true {
+                    let val = try io1.read()
+                    try output.write(val)
+                }
+            } catch {
+                XCTFail("problems with io1Reader")
             }
         }
         io1Reader.start()
 
         let io2Reader = ThreadContext(name: "IO1Reader") {
-            while true {
-                let val = io2.read()
-                output.write(val)
+            do {
+                while true {
+                    let val = try io2.read()
+                    try output.write(val)
+                }
+            } catch {
+                XCTFail("problems with io2Reader")
             }
         }
         io2Reader.start()
@@ -209,11 +250,15 @@ class PipelineTests: XCTestCase {
         let l2 = CountdownLatch(1)
         var cnt = 0
         let outputReader = ThreadContext(name: "OutputReader") {
-            while cnt < N * W {
-                let val = output.read()!
-                cnt += 1
+            do {
+                while cnt < N * W {
+                    let val = try output.read()!
+                    cnt += 1
+                }
+                l2.countDown()
+            } catch {
+                XCTFail("problems with outputReader")
             }
-            l2.countDown()
         }
         outputReader.start()
 
@@ -281,22 +326,30 @@ class PipelineTests: XCTestCase {
 
         let tc0 = ThreadContext(name: "tc0") {
             var i = 0
-            while i < 1000000 {
-                taskQ1.write(" howdy \(i)")
-                i += 1
+            do {
+                while i < 1000000 {
+                    try taskQ1.write(" howdy \(i)")
+                    i += 1
+                }
+            } catch {
+                XCTFail("problems with tc0")
             }
         }
         XCTAssertEqual(0, tc0.start())
 
         let r2 = { () -> Void in
             while true {
-                var msgs: [String?] = []
-                taskQ1.read(into: &msgs, upTo: 1000)
-                let s = msgs.count
-                var i = 0
-                while i < s {
-                    taskQ2.write(msgs[i])
-                    i += 1
+                do {
+                    var msgs: [String?] = []
+                    try taskQ1.read(into: &msgs, upTo: 1000)
+                    let s = msgs.count
+                    var i = 0
+                    while i < s {
+                        try taskQ2.write(msgs[i])
+                        i += 1
+                    }
+                } catch {
+                    XCTFail("problems with r2")
                 }
             }
         }
@@ -314,13 +367,16 @@ class PipelineTests: XCTestCase {
 
         let r3 = { () -> Void in
             var cnt = 0
-            while cnt < 1000000 {
-                var msgs: [String?] = []
-                taskQ2.read(into: &msgs, upTo: 1000)
-                cnt += msgs.count
+            do {
+                while cnt < 1000000 {
+                    var msgs: [String?] = []
+                    try taskQ2.read(into: &msgs, upTo: 1000)
+                    cnt += msgs.count
+                }
+                try l2.countDown()
+            } catch {
+                XCTFail("problems with r3")
             }
-            // print("done r3")
-            l2.countDown()
         }
         let tc3 = ThreadContext(name: "tc3", execute: r3)
         XCTAssertEqual(0, tc3.start())
@@ -341,7 +397,7 @@ protocol SillyTask {
 
     var name: String { get }
 
-    func f() -> Void
+    func f()  -> Void
 
 }
 
@@ -468,7 +524,11 @@ class SillyTaskC: SillyTask {
     func f() {
         SillyTaskC._cnt += 1
         if SillyTaskC._cnt == 1000000 {
-            SillyTaskC.GL?.countDown()
+            do {
+                try SillyTaskC.GL?.countDown()
+            } catch {
+                XCTFail("problems with sillytaskC")
+            }
         }
     }
 

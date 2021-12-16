@@ -13,29 +13,37 @@ public class Semaphore {
         let semCnt = Semaphore.semCnt.loadThenWrappingIncrement(ordering: .relaxed)
         tokens = SelectableChannel(id: "\(name):\(semCnt)", store: s, writeLock: writeLock, readLock: readLock)
         for _ in 1...n {
-            tokens.write(1)
+            try tokens.write(1)
         }
     }
 
     public func take() -> Void {
-        tokens.read()
+        do {
+            try tokens.read()
+        } catch {
+            // error
+        }
     }
 
     public func take(_ n: Int) -> Void {
         var into: [Int?] = []
-        repeat {
-            tokens.read(into: &into, upTo: n - into.count)
-        } while into.count < n
+        do {
+            repeat {
+                try tokens.read(into: &into, upTo: n - into.count)
+            } while into.count < n
+        } catch {
+            // error
+        }
     }
 
-    public func release() -> Void {
-        tokens.write(1)
+    public func release() throws -> Void {
+        try tokens.write(1)
     }
 
-    public func release(_ n: Int) -> Void {
+    public func release(_ n: Int) throws -> Void {
         var i = 0
         while i < n {
-            tokens.write(1)
+            try tokens.write(1)
             i += 1
         }
     }

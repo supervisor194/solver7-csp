@@ -13,16 +13,20 @@ class SemaphoreTests: XCTestCase {
         s.take()
         for i in 1...10 {
             let tc = ThreadContext(name: "t\(i)") {
-                for _ in 1...100 {
-                    s.take()
-                    cnt += 1
-                    s.release()
+                do {
+                    for _ in 1...100 {
+                        s.take()
+                        cnt += 1
+                        try s.release()
+                    }
+                    try latch.countDown()
+                } catch {
+                    XCTFail("problems with release or countdown")
                 }
-                latch.countDown()
             }
             XCTAssertEqual(0, tc.start())
         }
-        s.release()
+        try s.release()
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
         XCTAssertEqual(100 * 10, cnt)
     }
@@ -41,27 +45,35 @@ class SemaphoreTests: XCTestCase {
                 s.take(1)
             }
             cnt += 1
-            s.release(100)
-            l1.countDown()
+            do {
+                try s.release(100)
+                try l1.countDown()
+            } catch {
+                XCTFail("problems with release or countdown")
+            }
         }
         XCTAssertEqual(0, tc.start())
         let tc2 = ThreadContext(name: "t2") {
             l1.await(TimeoutState.computeTimeoutTimespec(sec: 5))
             s.take(100)
             cnt += 1
-            s.release(20)
-            for _ in 1...50 {
-                s.release(1)
+            do {
+                try s.release(20)
+                for _ in 1...50 {
+                    try s.release(1)
+                }
+                for _ in 1...30 {
+                    try s.release()
+                }
+                s.take(100)
+                try latch.countDown()
+            } catch {
+                XCTFail("problems with release or countdown")
             }
-            for _ in 1...30 {
-                s.release()
-            }
-            s.take(100)
-            latch.countDown()
         }
         XCTAssertEqual(0, tc2.start())
-        l0.countDown()
-        s.release(90)
+        try l0.countDown()
+        try s.release(90)
         latch.await(TimeoutState.computeTimeoutTimespec(sec: 5))
         XCTAssertEqual(2, cnt)
     }

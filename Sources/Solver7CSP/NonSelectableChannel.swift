@@ -49,12 +49,12 @@ public class NonSelectableChannel<T>: Channel {
         notEmpty.doNotifyAll()
     }
 
-    public func write(_ item: T?) {
+    public func write(_ item: T?) throws {
         writeLock.lock();
         defer {
             writeLock.unlock()
         }
-        let c = s.put(item)
+        let c = try s.put(item)
         if c == 1 {
             do {
                 readLock.lock()
@@ -64,12 +64,12 @@ public class NonSelectableChannel<T>: Channel {
                 notEmpty.doNotify()
             }
         }
-        while s.count == capacity {
+        while s.isFull() {
             ThreadContext.currentContext().down()
         }
     }
 
-    public func read() -> T? {
+    public func read() throws -> T? {
         let o: T?
         let c: Int
         do {
@@ -77,10 +77,10 @@ public class NonSelectableChannel<T>: Channel {
             defer {
                 readLock.unlock()
             }
-            while s.count == 0 {
+            while s.isEmpty() {
                 notEmpty.doWait()
             }
-            o = s.get()
+            o = try s.get()
             c = s.count
             if c > 0 {
                 notEmpty.doNotify()
@@ -92,7 +92,7 @@ public class NonSelectableChannel<T>: Channel {
         return o
     }
 
-    public func read(into: inout [T?], upTo: Int) -> Void {
+    public func read(into: inout [T?], upTo: Int) throws -> Void {
         let c: Int
         let r: Int
         do {
@@ -100,10 +100,10 @@ public class NonSelectableChannel<T>: Channel {
             defer {
                 readLock.unlock()
             }
-            while s.count == 0 {
+            while s.isEmpty() {
                 notEmpty.doWait()
             }
-            (c, r) = s.get(into: &into, upTo: upTo)
+            (c, r) = try s.get(into: &into, upTo: upTo)
             if r > 0 {
                 notEmpty.doNotify()
             }

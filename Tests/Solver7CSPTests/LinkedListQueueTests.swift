@@ -12,10 +12,14 @@ class LinkedListQueueTests: XCTestCase {
 
         for i in 1...10 {
             let writer = ThreadContext(name: "writer\(i)") {
-                for n in 1...100 {
-                    c.write("writer\(i) message #\(n)")
+                do {
+                    for n in 1...100 {
+                        try c.write("writer\(i) message #\(n)")
+                    }
+                    try latch.countDown()
+                } catch {
+                    XCTFail("problems with writer")
                 }
-                latch.countDown()
             }
             XCTAssertEqual(0, writer.start())
         }
@@ -23,13 +27,17 @@ class LinkedListQueueTests: XCTestCase {
         var cnt = 0
         for i in 1...1 {
             let reader = ThreadContext(name: "reader\(i)") {
-                while true {
-                    c.read()
-                    cnt += 1
-                    if (cnt == 1000) {
-                        latch.countDown()
-                        return
+                do {
+                    while true {
+                        try c.read()
+                        cnt += 1
+                        if (cnt == 1000) {
+                            try latch.countDown()
+                            return
+                        }
                     }
+                } catch {
+                    XCTFail("problems with reader")
                 }
             }
             XCTAssertEqual(0, reader.start())

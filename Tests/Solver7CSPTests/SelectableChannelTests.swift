@@ -10,7 +10,10 @@ class SelectableChannelTests : XCTestCase {
         let s = AnyStore<String>(q)
         let c = SelectableChannel<String>(id: "c1", store: s, writeLock: NonFairLock(2), readLock: NonFairLock(1))
         c.setHandler({ () -> Void in
-            let str = c.read()
+            do {
+            let str = try c.read()
+                } catch {
+                }
             // print("we have a string: \(str)")
         })
 
@@ -18,12 +21,15 @@ class SelectableChannelTests : XCTestCase {
         let s2 = AnyStore<Int>(q2)
         let c2 = SelectableChannel<Int>(id: "c2", store: s2, writeLock: NonFairLock(2), readLock: NonFairLock(1))
         c2.setHandler( { () -> Void in
-            let i = c2.read()
+            do {
+            let i = try c2.read()
+                } catch {
+                }
             // print("we have an int: \(i)")
         })
 
-        c.write("howdy doody")
-        c2.write(77)
+        try c.write("howdy doody")
+        try c2.write(77)
 
         var selectables = [Selectable]()
         selectables.append(c)
@@ -40,7 +46,11 @@ class SelectableChannelTests : XCTestCase {
 
         let myRunnable = { () -> Void in
             for i in 1...10 {
-                c.write("string cnt \(i)")
+                do {
+                    try c.write("string cnt \(i)")
+                } catch {
+                    XCTFail("problems with write")
+                }
                 sleep(1)
             }
         }
@@ -49,7 +59,11 @@ class SelectableChannelTests : XCTestCase {
 
         let myRunnable2 = { () -> Void in
             for i in 1...10 {
-                c2.write(i+100)
+                do {
+                    try c2.write(i + 100)
+                } catch {
+                    XCTFail("problems with write")
+                }
                 sleep(1)
             }
         }
@@ -78,18 +92,26 @@ class SelectableChannelTests : XCTestCase {
         let s = AnyStore<String>(q)
         let c = SelectableChannel<String>(id: "c1", store: s, writeLock: NonFairLock(1), readLock: NonFairLock(1))
         c.setHandler({ () -> Void in
-            let str = c.read()
-            // print("we have a string: \(str))")
-            numMsgs += 1
+            do {
+                let str = try c.read()
+                // print("we have a string: \(str))")
+                numMsgs += 1
+            } catch {
+                XCTFail("problems with read")
+            }
         })
         let writer = { () -> Void in
             var msgNum = 1
-            for _ in 1...10 {
-                for _ in 1...5 {
-                    c.write("writer msg: \(msgNum)")
-                    msgNum += 1
+            do {
+                for _ in 1...10 {
+                    for _ in 1...5 {
+                        try c.write("writer msg: \(msgNum)")
+                        msgNum += 1
+                    }
+                    usleep(250000)
                 }
-                usleep(250000)
+            } catch {
+                XCTFail("problems with write")
             }
             // print("done with writer")
         }
@@ -102,18 +124,26 @@ class SelectableChannelTests : XCTestCase {
         let s2 = AnyStore<Int>(q2)
         let c2 = SelectableChannel<Int>(id: "c2", store: s2, writeLock: NonFairLock(2), readLock: NonFairLock(1))
         c2.setHandler({ () -> Void in
-            let i = c2.read()
-            // print("we have an int: \(i)")
-            numInts += 1
+            do {
+                let i = try c2.read()
+                // print("we have an int: \(i)")
+                numInts += 1
+            } catch {
+                XCTFail("problems with read")
+            }
         })
         let writer2 = { () -> Void in
             var intNum = 1
-            for _ in 1...10 {
-                for _ in 1...5 {
-                    c2.write(intNum)
-                    intNum += 1
+            do {
+                for _ in 1...10 {
+                    for _ in 1...5 {
+                        try c2.write(intNum)
+                        intNum += 1
+                    }
+                    usleep(200000)
                 }
-                usleep(200000)
+            } catch {
+                XCTFail("problems with write")
             }
             // print("done with writer2")
         }
@@ -164,26 +194,38 @@ class SelectableChannelTests : XCTestCase {
 
         var cnt = 0
         ch1.setHandler { ()->Void in
-            if let x = ch1.read() {
-                cnt += x
-            } else {
-                ch1.disable()
+            do {
+                if let x = try ch1.read() {
+                    cnt += x
+                } else {
+                    ch1.disable()
+                }
+            } catch {
+                XCTFail("problems with reader")
             }
         }
         var cnt2 = 0
         ch2.setHandler { ()->Void in
-            if let x = ch2.read() {
-                cnt2+=1
-            } else {
-                ch2.disable()
+            do {
+                if let x = try ch2.read() {
+                    cnt2 += 1
+                } else {
+                    ch2.disable()
+                }
+            } catch {
+                XCTFail("problems with reader")
             }
         }
         var sum = 0.0
         ch3.setHandler {
-            if let x = ch3.read() {
-                sum+=x
-            } else {
-                ch3.disable()
+            do {
+                if let x = try ch3.read() {
+                    sum += x
+                } else {
+                    ch3.disable()
+                }
+            } catch {
+                XCTFail("problems with reader")
             }
         }
         let latch = CountdownLatch(1)
@@ -209,19 +251,19 @@ class SelectableChannelTests : XCTestCase {
         }
         p.start()
 
-        ch1.write(88)
-        ch2.write("howdy")
-        ch3.write(11.39)
+        try ch1.write(88)
+        try ch2.write("howdy")
+        try ch3.write(11.39)
 
         ch1.close()
         ch2.close()
-        ch3.write(3939.319)
+        try ch3.write(3939.319)
 
         ch3.close()
 
-        ch1.write(99)
-        ch2.write("won't make it")
-        ch3.write(-10000.30)
+        try ch1.write(99)
+        try ch2.write("won't make it")
+        try ch3.write(-10000.30)
 
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
         latch.await(&timeoutAt)

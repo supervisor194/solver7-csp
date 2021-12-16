@@ -27,14 +27,22 @@ class LockTests: XCTestCase {
             condition.doNotify()
             cnt += 1
             lock.unlock()
-            l2.countDown()
+            do {
+                try l2.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
             lock.unlock()
             lock.unlock()
         }
 
         func dm() -> Void {
             // print("in the destroy me for myRunnable")
-            l3.countDown()
+            do {
+                try l3.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
         }
 
         let tc = ThreadContext( name: "howdy doody", destroyMe: dm, execute: myRunnable)
@@ -53,7 +61,11 @@ class LockTests: XCTestCase {
             cnt+=1
             lock.unlock()
             // lock.unlock()  add to fail by letting tc3 acquire lock
-            l2.countDown()
+            do {
+                try l2.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
         }
         XCTAssertEqual(0, tc2.start())
 
@@ -90,7 +102,11 @@ class LockTests: XCTestCase {
                 condition.doWait()
                 lock.unlock()
                 // print("done with \(ThreadContext.currentContext().name)")
-                latch.countDown()
+                do {
+                    try latch.countDown()
+                } catch {
+                    XCTFail("problems with countdown")
+                }
             }
             XCTAssertEqual(0, tc.start())
         }
@@ -130,7 +146,11 @@ class LockTests: XCTestCase {
 
             func dm() -> Void {
                 // print("in the destroy me for myRunnable")
-                latch.countDown()
+                do {
+                    try latch.countDown()
+                } catch {
+                    XCTFail("problems with countdown")
+                }
             }
 
             let tc = ThreadContext(name: String(i), destroyMe: dm, execute: r)

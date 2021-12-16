@@ -16,7 +16,11 @@ class NonSelectableChannelTests: XCTestCase {
 
         let w1 = { () -> Void in
             gettimeofday(&t1, nil)
-            c.write(77)
+            do {
+                try c.write(77)
+            } catch {
+                XCTFail("problems with w1")
+            }
             gettimeofday(&t2, nil)
         }
         let writer = ThreadContext(name: "w1", execute: w1)
@@ -27,8 +31,12 @@ class NonSelectableChannelTests: XCTestCase {
         let r1 = { () -> Void in
             sleep(3)
             gettimeofday(&readTime, nil)
-            let val = c.read()!
-            i = val
+            do {
+                let val = try c.read()!
+                i = val
+            } catch {
+                XCTFail("problems with reader")
+            }
             done = true
         }
         let reader = ThreadContext(name: "r1", execute: r1)
@@ -66,7 +74,11 @@ class NonSelectableChannelTests: XCTestCase {
 
         let w1 = { () -> Void in
             gettimeofday(&t1, nil)
-            c.write("hello there")
+            do {
+                try c.write("hello there")
+            } catch {
+                XCTFail("problems with w1")
+            }
             gettimeofday(&t2, nil)
         }
         let writer = ThreadContext(name: "w1", execute: w1)
@@ -82,8 +94,12 @@ class NonSelectableChannelTests: XCTestCase {
         let r1 = { () -> Void in
             sleep(3)
             gettimeofday(&readTime, nil)
-            let s = c.read()!
-            msg.s = s
+            do {
+                let s = try c.read()!
+                msg.s = s
+            } catch {
+                XCTFail("problems with r1")
+            }
             done = true
         }
         let reader = ThreadContext(name: "r1", execute: r1)
@@ -102,22 +118,22 @@ class NonSelectableChannelTests: XCTestCase {
     }
 
 
-    func testFoo() {
+    func testFoo() throws {
         let q = LinkedListQueue<MyInt64>(max: 100)
         let s = AnyStore<MyInt64>(q)
         let c = NonSelectableChannel<MyInt64>(store: s)
 
         XCTAssertEqual(0, q.count)
-        c.write(MyInt64(100))
+        try c.write(MyInt64(100))
 
         XCTAssertEqual(1, q.count)
-        let val = c.read()
+        let val = try c.read()
         XCTAssertEqual(100, val?.val)
 
-        c.write(nil)
+        try c.write(nil)
         XCTAssertEqual(1, q.count)
 
-        let val2 = c.read()
+        let val2 = try c.read()
         XCTAssertEqual(nil, val2?.val)
         XCTAssertEqual(nil, val2)
         XCTAssertEqual(0, q.count)
@@ -130,24 +146,36 @@ class NonSelectableChannelTests: XCTestCase {
         let l1 = try CountdownLatch2(1)
 
         func dm() -> Void {
-            l1.countDown()
+            do {
+                try l1.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
         }
 
         let l2 = try CountdownLatch2(100)
         let r = { () -> Void in
             var cnt = 0
-            repeat {
-                let x = c.read()
-                cnt += 1
-                l2.countDown()
-            } while cnt < 100
+            do {
+                repeat {
+                    let x = try c.read()
+                    cnt += 1
+                    try l2.countDown()
+                } while cnt < 100
+            } catch {
+                XCTFail("problems with countdown or read")
+            }
         }
         let reader = ThreadContext(name: "reader", destroyMe: dm, execute: r)
         XCTAssertEqual(0, reader.start())
 
         let writer = ThreadContext(name: "writer") {
-            for i in 1...100 {
-                c.write("howdy doody \(i)")
+            do {
+                for i in 1...100 {
+                    try c.write("howdy doody \(i)")
+                }
+            } catch {
+                XCTFail("problems with writer")
             }
         }
         XCTAssertEqual(0, writer.start())
@@ -164,21 +192,25 @@ class NonSelectableChannelTests: XCTestCase {
         let c = ChannelFactory.AsAny.LLQ(max: 10).create(t: Int.self)
         var sum = 0
         let tc = ThreadContext(name: "foo") {
-            while true {
-                if let x = c.read() {
-                    sum += x
-                } else {
-                    latch.countDown()
-                    return
+            do {
+                while true {
+                    if let x = try c.read() {
+                        sum += x
+                    } else {
+                        latch.countDown()
+                        return
+                    }
                 }
+            } catch {
+                XCTFail("problems with reader")
             }
         }
         tc.start()
 
         for i in 1...10 {
-            c.write(i)
+            try c.write(i)
         }
-        c.write(nil)
+        try c.write(nil)
 
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
         latch.await(&timeoutAt)
@@ -192,25 +224,33 @@ class NonSelectableChannelTests: XCTestCase {
         var readers: [ThreadContext] = []
         let writer = ThreadContext(name: "writer") {
             var r = SystemRandomNumberGenerator()
-            while true {
-                c.write(Int(r.next() % 100000))
-                usleep(100)
+            do {
+                while true {
+                    try c.write(Int(r.next() % 100000))
+                    usleep(100)
+                }
+            } catch {
+                XCTFail("problems withg writer")
             }
         }
         writer.start()
         for i in 1...1000 {
             let reader = ThreadContext(name: "reader\(i)") {
-                while true {
-                    if let x = c.read() {
-                        if x % 7 == 0 {
-                            return
+                do {
+                    while true {
+                        if let x = try c.read() {
+                            if x % 7 == 0 {
+                                return
+                            } else {
+                                //  print("still going: \(ThreadContext.currentContext().name)")
+                            }
                         } else {
-                            //  print("still going: \(ThreadContext.currentContext().name)")
+                            // print("done with:\(ThreadContext.currentContext().name)")
+                            return
                         }
-                    } else {
-                        // print("done with:\(ThreadContext.currentContext().name)")
-                        return
                     }
+                } catch {
+                    XCTFail("problems with reader")
                 }
             }
             reader.start()
@@ -234,20 +274,28 @@ class NonSelectableChannelTests: XCTestCase {
             var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
             latch.await(&timeoutAt)
             XCTAssertEqual(0, latch.get())
-            for i in 1...100 {
-                c.write("howdy doody: \(i)")
+            do {
+                for i in 1...100 {
+                    try c.write("howdy doody: \(i)")
+                }
+            } catch {
+                XCTFail("problems with writer")
             }
             c.close()
         }
         writer.start()
         var cnt = 0
         let reader = ThreadContext(name: "reader") {
-            while true {
-                if let s = c.read() {
-                    cnt += 1
-                } else {
-                    return
+            do {
+                while true {
+                    if let s = try c.read() {
+                        cnt += 1
+                    } else {
+                        return
+                    }
                 }
+            } catch {
+                XCTFail("Problems with reader")
             }
         }
         reader.start()
@@ -267,8 +315,12 @@ class NonSelectableChannelTests: XCTestCase {
             var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 10000)
             latch.await(&timeoutAt)
             XCTAssertEqual(0, latch.get())
-            for i in 1...487 {
-                c.write("howdy doody: \(i)")
+            do {
+                for i in 1...487 {
+                    try c.write("howdy doody: \(i)")
+                }
+            } catch {
+                XCTFail("problems with writer")
             }
             c.close()
         }
@@ -279,12 +331,16 @@ class NonSelectableChannelTests: XCTestCase {
         var i = 0
         while i < 500 {
             let reader = ThreadContext(name: "reader\(i)") {
-                while true {
-                    if let s = c.read() {
-                        let cnt = cnt.wrappingIncrementThenLoad(ordering: .relaxed)
-                    } else {
-                        return
+                do {
+                    while true {
+                        if let s = try c.read() {
+                            let cnt = cnt.wrappingIncrementThenLoad(ordering: .relaxed)
+                        } else {
+                            return
+                        }
                     }
+                } catch {
+                    XCTFail("problems with reader")
                 }
             }
             reader.start()

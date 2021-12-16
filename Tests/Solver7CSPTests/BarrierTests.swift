@@ -25,9 +25,13 @@ class BarrierTests: XCTestCase {
         XCTAssertEqual(0, mTC.start())
 
         let latch = try CountdownLatch2(1)
-        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
+        try taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
             print("hello there, i'm task 1")
-            latch.countDown()
+            do {
+                try latch.countDown()
+            } catch {
+                XCTFail("problems with latch countdown")
+            }
         })
 
         latch.await(TimeoutState.computeTimeoutTimespec(millis: 3000))
@@ -38,21 +42,25 @@ class BarrierTests: XCTestCase {
         let latch2 = try CountdownLatch2(1)
         let latch3 = try CountdownLatch2(1)
 
-        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
+        try taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 1) { () -> Void in
             print("i'm a delaying task")
             latch2.await(TimeoutState.computeTimeoutTimespec(millis: 5000))
             XCTAssertEqual(0, latch2.get())
             val = 7
         })
-        taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 5) { () -> Void in
+        try taskChannel.write(BarrierTask(uuid: UUID.init(), numTokens: 5) { () -> Void in
             print("i should have waited on the delaying task to release a token so i can get 5")
             XCTAssertEqual(7, val)
             val = 77
-            latch3.countDown()
+            do {
+                try latch3.countDown()
+            } catch {
+                XCTFail("problems with latch countdown")
+            }
         })
 
         sleep(1)
-        latch2.countDown()
+        try latch2.countDown()
         latch3.await(TimeoutState.computeTimeoutTimespec(millis: 5000))
         XCTAssertEqual(0, latch3.get())
         XCTAssertEqual(77, val)

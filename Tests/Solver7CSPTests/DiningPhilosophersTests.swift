@@ -35,7 +35,7 @@ class DiningPhilosophersTests  : XCTestCase {
         }
 
         for i in 0...4 {
-            chopstick[i].write("available")
+            try chopstick[i].write("available")
         }
 
         wantToSleep.await(TimeoutState.computeTimeoutTimespec(millis: 60000))
@@ -80,37 +80,41 @@ class Philosopher {
         Philosopher._pause()
     }
 
-    func dine() -> Void {
+    func dine() throws -> Void {
         print("\(id) is trying to get two chopsticks to dine")
-        myChopstick.read()
-        otherChopstick.read()
+        try myChopstick.read()
+        try otherChopstick.read()
 
         print("\(id) has two chopsticks, dining on meal: \(11 - mealsToEat) of 10")
         mealsToEat -= 1
         Philosopher._pause()
 
-        otherChopstick.write("available")
-        myChopstick.write("available")
+        try otherChopstick.write("available")
+        try myChopstick.write("available")
 
     }
 
-    func enter() -> Void {
-        availableEnterTokens.read()
+    func enter() throws -> Void {
+        try availableEnterTokens.read()
     }
 
-    func exit() -> Void {
-        exitRequests.write("make available")
+    func exit() throws -> Void {
+        try exitRequests.write("make available")
     }
 
     func run() -> Void {
-        while mealsToEat > 0 {
-            think()
-            enter()
-            dine()
-            exit()
+        do {
+            while mealsToEat > 0 {
+                think()
+                try enter()
+                try dine()
+                try exit()
+            }
+            print("\(id) is done thinking and easting, going to bed!")
+            try wantsToSleep.countDown()
+        } catch {
+            print("problems with philosopher")
         }
-        print("\(id) is done thinking and easting, going to bed!")
-        wantsToSleep.countDown()
     }
 
     static var rng = SystemRandomNumberGenerator()
@@ -134,13 +138,17 @@ class Porter {
 
     public func run() {
         // setup 4 available tokens
-        for i in 1...4 {
-            exitRequests.write("\(i)")
-        }
+        do {
+            for i in 1...4 {
+                try exitRequests.write("\(i)")
+            }
 
-        while true {
-            let token = exitRequests.read()
-            availableEnterTokens.write(token)
+            while true {
+                let token = try exitRequests.read()
+                try availableEnterTokens.write(token)
+            }
+        } catch {
+            print("problems with porter")
         }
     }
 

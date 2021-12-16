@@ -5,13 +5,13 @@ public class BarrierWorker {
 
     let taskQ: AnyChannel<BarrierTask>
 
-    let tokenRequestWriter: (_ req: TokenRequest) -> Void
-    let tokenReleaseWriter: (_ req: Int) -> Void
+    let tokenRequestWriter: (_ req: TokenRequest) throws -> Void
+    let tokenReleaseWriter: (_ req: Int) throws -> Void
     let tokenResponseQ: NonSelectableChannel<Int>
 
     init(taskQ: AnyChannel<BarrierTask>,
-         tokenRequestWriter: @escaping (TokenRequest) -> Void,
-         tokenReleaseWriter: @escaping (Int) -> Void) {
+         tokenRequestWriter: @escaping (TokenRequest) throws -> Void,
+         tokenReleaseWriter: @escaping (Int) throws -> Void) {
         self.taskQ = taskQ
         self.tokenRequestWriter = tokenRequestWriter
         self.tokenReleaseWriter = tokenReleaseWriter
@@ -21,22 +21,30 @@ public class BarrierWorker {
     }
 
     public func run() -> Void {
-        while true {
-            let task = taskQ.read()!
-            getTokens(task)
-            // print("worker: \(Unmanaged.passUnretained(self).toOpaque()), calling handle()...")
-            task.handle()
-            tokenReleaseWriter(task.numTokens)
+        do {
+            while true {
+                let task = try taskQ.read()!
+                getTokens(task)
+                // print("worker: \(Unmanaged.passUnretained(self).toOpaque()), calling handle()...")
+                task.handle()
+                try tokenReleaseWriter(task.numTokens)
+            }
+        } catch {
+
         }
     }
 
     func getTokens(_ task: BarrierTask) {
         let tokenRequest = TokenRequest(task.numTokens, { () -> Void in
             // todo: maybe not use closure ???
-            self.tokenResponseQ.write(task.numTokens)
+            try self.tokenResponseQ.write(task.numTokens)
         })
-        tokenRequestWriter(tokenRequest)
-        tokenResponseQ.read()
+        do {
+            try tokenRequestWriter(tokenRequest)
+            try tokenResponseQ.read()
+        } catch {
+
+        }
     }
 
 }

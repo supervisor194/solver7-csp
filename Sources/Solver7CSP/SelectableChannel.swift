@@ -59,12 +59,12 @@ public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable {
         return !s.isEmpty()
     }
 
-    public override func write(_ item: T?) {
+    public override func write(_ item: T?) throws {
         writeLock.lock()
         defer  {
             writeLock.unlock()
         }
-        let c = s.put(item)
+        let c = try s.put(item)
         if let selector = _selector {
             selector.schedule()
         }
@@ -77,7 +77,7 @@ public class SelectableChannel<T>: NonSelectableChannel<T>, Selectable {
                 notEmpty.doNotify()
             }
         }
-        while s.count == capacity {
+        while s.isFull() {
             ThreadContext.currentContext().down()
         }
     }

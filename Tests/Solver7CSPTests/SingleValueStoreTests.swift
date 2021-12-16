@@ -17,9 +17,13 @@ class SingleValueStoreTests : XCTestCase {
         for i in 1...W {
             let w = ThreadContext(name: "writer:\(i)") {
                 var x = 1
-                while x <= N {
-                    ch.write(x)
-                    x+=1
+                do {
+                    while x <= N {
+                        try ch.write(x)
+                        x += 1
+                    }
+                } catch {
+                    XCTFail("problems with write")
                 }
             }
             w.start()
@@ -28,9 +32,13 @@ class SingleValueStoreTests : XCTestCase {
         let ch2 = ChannelFactory.AsAny.SVS(writeLock: NonFairLock(R), readLock: NonFairLock(1)).create(t: Int.self)
         for i in 1...R {
             let r = ThreadContext(name: "reader:\(i)") {
-                while true {
-                    let x = ch.read()!
-                    ch2.write(x)
+                do {
+                    while true {
+                        let x = try ch.read()!
+                        try ch2.write(x)
+                    }
+                } catch {
+                    XCTFail("problems with read or write")
                 }
             }
             r.start()
@@ -40,8 +48,12 @@ class SingleValueStoreTests : XCTestCase {
         let latch = CountdownLatch(1)
         let adder = ThreadContext(name: "adder") {
             var sum = 0
-            while sum < S {
-                sum += ch2.read()!
+            do {
+                while sum < S {
+                    sum += try ch2.read()!
+                }
+            } catch {
+                XCTFail("problems with read")
             }
             XCTAssertEqual(S, sum)
             latch.countDown()

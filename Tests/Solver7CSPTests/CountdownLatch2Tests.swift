@@ -12,7 +12,11 @@ class CountdownLatch2Tests: XCTestCase {
         let w = ThreadContext(name: "writer") {
             x.store(0, ordering: .relaxed)
             sleep(1)
-            latch.countDown()
+            do {
+                try latch.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
         }
         w.start()
         while x.load(ordering: .relaxed) == 1 {
@@ -28,7 +32,11 @@ class CountdownLatch2Tests: XCTestCase {
         let x = ManagedAtomic<Int>(1)
 
         let w = ThreadContext(name: "writer") {
-            latch.countDown()
+            do {
+                try latch.countDown()
+            } catch {
+                XCTFail("problems with countdown")
+            }
             x.store(0, ordering: .relaxed)
         }
         w.start()

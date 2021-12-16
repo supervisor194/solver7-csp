@@ -1,5 +1,8 @@
 import Foundation
 
+public enum ChannelError: Error {
+    case closed(msg: String)
+}
 
 public protocol Closeable {
     func getId() -> String
@@ -9,14 +12,14 @@ public protocol Closeable {
 
 public protocol ReadableChannel {
     associatedtype Item
-    func read() -> Item?
-    func read(into: inout [Item?], upTo: Int) -> Void
+    func read() throws -> Item?
+    func read(into: inout [Item?], upTo: Int) throws -> Void
     func numAvailable() -> Int
 }
 
 public protocol WritableChannel {
     associatedtype Item
-    func write(_ item: Item?)
+    func write(_ item: Item?) throws
 }
 
 
@@ -33,16 +36,16 @@ public class AnyChannel<T>: Channel {
         _id()
     }
 
-    private let _read: () -> T?
+    private let _read: () throws -> T?
 
-    private let _readAvailable: (inout [T?], Int) -> Void
+    private let _readAvailable: (inout [T?], Int) throws -> Void
 
-    public func read() -> T? {
-        _read()
+    public func read() throws -> T? {
+        try _read()
     }
 
-    public func read(into: inout [T?], upTo: Int) {
-        _readAvailable(&into, upTo)
+    public func read(into: inout [T?], upTo: Int) throws {
+        try _readAvailable(&into, upTo)
     }
 
     private let _numAvailable: () -> Int
@@ -51,10 +54,10 @@ public class AnyChannel<T>: Channel {
         _numAvailable()
     }
 
-    private let _write: (_ item: T?) -> Void
+    private let _write: (_ item: T?) throws -> Void
 
-    public func write(_ item: T?) -> Void {
-        _write(item)
+    public func write(_ item: T?) throws -> Void {
+        try _write(item)
     }
 
     private let _close: () -> Void

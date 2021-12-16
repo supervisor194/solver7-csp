@@ -16,10 +16,6 @@ public protocol Store: class {
 
     associatedtype Item
 
-    /**
-     Max for the maximum number of Items in a Store.  This is not necessarily a hard imposed limit, but is to
-      be used by the readers and writers.
-     */
     var max: Int { get }
 
     var count: Int { get }
@@ -30,13 +26,13 @@ public protocol Store: class {
 
     func isEmpty() -> Bool
 
-    func put(_ item: Item?) -> Int
+    func put(_ item: Item?) throws -> Int
 
-    func putForNode(_ item: Item?) -> (Int, U: StoreNode?)
+    // func putForNode(_ item: Item?) -> (Int, U: StoreNode?)
 
-    func get() -> Item?
+    func get() throws -> Item?
 
-    func get(into: inout [Item?], upTo: Int) -> (Int, Int)
+    func get(into: inout [Item?], upTo: Int) throws -> (Int, Int)
 
     func clear() -> Int
 
@@ -98,28 +94,30 @@ public class AnyStore<T>: Store {
         _isEmpty()
     }
 
-    private let _put: (_ item: T?) -> Int
+    private let _put: (_ item: T?) throws -> Int
 
-    public func put(_ item: T?) -> Int {
-        _put(item)
+    public func put(_ item: T?) throws -> Int {
+        try _put(item)
     }
 
+    /*
     private let _putForNode: (_ item: T?) -> (Int, U: StoreNode?)
 
     public func putForNode(_ item: T?) -> (Int, U: StoreNode?) {
         _putForNode(item)
     }
+     */
 
-    private let _get: () -> T?
+    private let _get: () throws -> T?
 
-    public func get() -> T? {
-        _get()
+    public func get() throws -> T? {
+        try _get()
     }
 
-    private let _getAvailableUpTo: (inout [T?], Int) -> (Int, Int)
+    private let _getAvailableUpTo: (inout [T?], Int) throws -> (Int, Int)
 
-    public func get(into: inout [T?], upTo: Int) -> (Int, Int) {
-        _getAvailableUpTo(&into, upTo)
+    public func get(into: inout [T?], upTo: Int) throws -> (Int, Int) {
+        try _getAvailableUpTo(&into, upTo)
     }
 
     private let _clear: () -> Int
@@ -141,7 +139,7 @@ public class AnyStore<T>: Store {
         _isFull = s.isFull
         _isEmpty = s.isEmpty
         _put = s.put
-        _putForNode = s.putForNode
+        // _putForNode = s.putForNode
         _get = s.get
         _getAvailableUpTo = s.get
         _clear = s.clear

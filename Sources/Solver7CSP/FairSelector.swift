@@ -66,10 +66,12 @@ public class FairSelector: Selector {
             }
             return nil
         }) {
-            if (idealNext === node && selectables.size == 1) {
-                idealNext = nil
-            } else {
-                idealNext = idealNext?.next
+            if idealNext === node {
+                if selectables.size == 1 {
+                    idealNext = nil
+                } else {
+                    idealNext = idealNext?.next
+                }
             }
             selectables.remove(node)
             return true

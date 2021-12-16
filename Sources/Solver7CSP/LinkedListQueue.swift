@@ -82,7 +82,7 @@ class LinkedListQueue<T: Equatable>: QueueStore {
 
     func clear() -> Int {
         var num: Int = 0
-        while _count.loadThenWrappingDecrement(ordering: .relaxed) > 0 {
+        while _count.load(ordering: .relaxed) > 0 {
             dequeue()
             num += 1
         }

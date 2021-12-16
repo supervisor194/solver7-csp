@@ -64,9 +64,9 @@ class FactoryTest: XCTestCase {
         let llq = StoreFactory.AsAny.LLQ(max: 10).create(t: Int.self)
         XCTAssertEqual(10, llq.max)
         XCTAssertEqual(0, llq.count)
-        llq.put(3)
+        try llq.put(3)
         XCTAssertEqual(1, llq.count)
-        let x = llq.get()!
+        let x = try llq.get()!
         XCTAssertEqual(3,x)
         XCTAssertEqual(0, llq.count)
     }
@@ -75,9 +75,9 @@ class FactoryTest: XCTestCase {
         let svs = StoreFactory.AsAny.SVS.create(t: Int.self)
         XCTAssertEqual(1, svs.max)
         XCTAssertEqual(0, svs.count)
-        svs.put(3)
+        try svs.put(3)
         XCTAssertEqual(1, svs.count)
-        let x = svs.get()!
+        let x = try svs.get()!
         XCTAssertEqual(3,x)
         XCTAssertEqual(0, svs.count)
     }
@@ -92,7 +92,11 @@ class FactoryTest: XCTestCase {
         for i in 1...10 {
             let selectable = ChannelFactory.AsSelectable.SLLQ(id: "\(i)", max: 10).create(t: Int.self)
             selectable.setHandler() {
-                sum += selectable.read()!
+                do {
+                    sum += try selectable.read()!
+                } catch {
+                    XCTFail("problems with read")
+                }
             }
             selectables.append(selectable)
             channels.append(AnyChannel<Int>(selectable as! SelectableChannel))
@@ -130,10 +134,14 @@ class FactoryTest: XCTestCase {
         let lw = try CountdownLatch(10)
         for w in 1...10 {
             let writer = ThreadContext(name: "w:\(w)") {
-                for j in 0...9 {
-                    channels[j].write(j)
+                do {
+                    for j in 0...9 {
+                        try channels[j].write(j)
+                    }
+                    lw.countDown()
+                } catch {
+                    XCTFail("problems with writer")
                 }
-                lw.countDown()
             }
             writer.start()
         }

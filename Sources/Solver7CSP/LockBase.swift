@@ -13,8 +13,8 @@ open class LockBase {
     private let waitQTailPtr: UnsafeAtomic<NodePtr>
     var waitQHeadPtr: UnsafeAtomic<NodePtr>
 
-    private let waiterQ: LinkedListQueue<TCNode>
-    private let waiterPool: LinkedListQueue<TCNode>
+    // private let waiterQ: LinkedListQueue<TCNode>
+    // private let waiterPool: LinkedListQueue<TCNode>
 
     // todo: determine if we should keep maxThreads and pooling with circular buffer ???
     let maxThreads: Int
@@ -37,11 +37,13 @@ open class LockBase {
         waitQTailPtr = UnsafeAtomic<NodePtr>.create(firstNodePtr)
         waitQHeadPtr = UnsafeAtomic<NodePtr>.create(firstNodePtr)
 
+        /*
         waiterQ = LinkedListQueue<TCNode>(max: maxThreads)
         waiterPool = LinkedListQueue<TCNode>(max: maxThreads)
         for _ in 1...maxThreads {
             waiterPool.put(TCNode(status: WaiterState.WAITER_INITIAL))
         }
+         */
     }
 
     func schedule(_ tc: ThreadContext) -> Void {
