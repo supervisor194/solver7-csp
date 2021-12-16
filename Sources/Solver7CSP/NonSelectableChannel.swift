@@ -13,6 +13,8 @@ public class NonSelectableChannel<T>: Channel {
     let readLock: Lock
     let notEmpty: Condition
 
+    var closed: Bool = false
+
     var s: AnyStore<T>
 
     public init(id: String? = nil, store: AnyStore<T>, writeLock: Lock = NonFairLock(10), readLock: Lock = NonFairLock(10)) {
@@ -38,14 +40,18 @@ public class NonSelectableChannel<T>: Channel {
         s.isEmpty()
     }
 
+    public func isClosed() -> Bool {
+        closed
+    }
+
     public func close() {
-        writeLock.lock()
         readLock.lock()
         defer {
             readLock.unlock()
-            writeLock.unlock()
         }
         s = AnyStore<T>(HaltingStore(original: s))
+        closed = true
+        writeLock.reUp()
         notEmpty.doNotifyAll()
     }
 

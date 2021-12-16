@@ -33,13 +33,6 @@ class HaltingStore<T> : Store  {
         false
     }
 
-    /*
-    func putForNode(_ item: Item?) -> (Int, U: StoreNode?) {
-        (-1, nil)
-    }
-     */
-
-
     public var count: Int {
         get {
             original.count

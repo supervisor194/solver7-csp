@@ -19,7 +19,6 @@ class PipelineTests: XCTestCase {
             try ch1.write("hello1")
             try ch1.write("skip")
             try ch1.write("hello2")
-            // todo: loop over ch and close if none present
             try ch1.write("stage0 done")
             } catch {
                 XCTFail("problems with writes")
@@ -38,13 +37,15 @@ class PipelineTests: XCTestCase {
                         } else {
                             try ch2.write(x + " added by stage1")
                         }
-                    } else {
-                        try ch2.write("stage1 done")
-                        return
                     }
                 }
             } catch {
-                XCTFail("problems with relay")
+                do {
+                    try ch2.write("stage1 done")
+                } catch {
+                    XCTFail("Should be able to write to ch2")
+                }
+                ch2.close()
             }
         }
         let stage1 = Stage(name: "stage1", inputs: [ch1], outputs: [ch2, ch4], tc: stage1TC)
@@ -56,28 +57,36 @@ class PipelineTests: XCTestCase {
                     if let x = try ch2.read() {
                         try ch3.write(x + " added by stage2")
                     } else {
-                        try ch3.write("stage2 done")
+
                         return
                     }
                 }
             } catch {
-                XCTFail("problems with stage1")
+                do {
+                    try ch3.write("stage2 done")
+                } catch {
+                    XCTFail("Shoudl be able to write to ch3")
+                }
+                ch3.close()
             }
         }
         let stage2 = Stage(name: "stage2", inputs: [ch2], outputs: [ch3], tc: stage2TC)
         stage2TC.start()
+
         let stage3TC = ThreadContext(name: "stage3") {
             do {
                 while true {
                     if let x = try ch3.read() {
                         try ch4.write(x + " added by stage3")
-                    } else {
-                        try ch4.write("stage3 done")
-                        return
                     }
                 }
             } catch {
-                XCTFail("problems with stage3TC")
+                do {
+                    try  ch4.write("stage3 done")
+                } catch {
+                    XCTFail("Should be able to write to ch4")
+                }
+                ch4.close()
             }
         }
         let stage3 = Stage(name: "stage3", inputs: [ch3], outputs: [ch4], tc: stage3TC)
@@ -90,13 +99,11 @@ class PipelineTests: XCTestCase {
                 while true {
                     if let x = try ch4.read() {
                         output.append(x)
-                    } else {
-                        output.append("stage4 done")
-                        return
                     }
                 }
             } catch {
-                XCTFail("problems with stage4TC")
+                output.append("stage4 done")
+                ch4.close()
             }
         }
         let stage4 = Stage(name: "stage4", inputs: [ch4], outputs: [], tc: stage4TC)
@@ -147,6 +154,15 @@ class PipelineTests: XCTestCase {
             i+=1
         }
 
+        XCTAssertEqual(0, ch1.numAvailable())
+        XCTAssertEqual(0, ch2.numAvailable())
+        XCTAssertEqual(0, ch3.numAvailable())
+        XCTAssertEqual(0, ch4.numAvailable())
+
+        XCTAssertTrue(ch1.isClosed())
+        XCTAssertTrue(ch2.isClosed())
+        XCTAssertTrue(ch3.isClosed())
+        XCTAssertTrue(ch4.isClosed())
     }
 
     public func testManyWritersManyReaders() throws {

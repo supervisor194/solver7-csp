@@ -8,6 +8,7 @@ public protocol Closeable {
     func getId() -> String
     func close()
     func isEmpty() -> Bool
+    func isClosed() -> Bool
 }
 
 public protocol ReadableChannel {
@@ -72,6 +73,11 @@ public class AnyChannel<T>: Channel {
         _isEmpty()
     }
 
+    private let _isClosed: () -> Bool
+
+    public func isClosed() -> Bool {
+        _isClosed()
+    }
 
     private let _isSelectable: Bool
 
@@ -99,6 +105,7 @@ public class AnyChannel<T>: Channel {
         _write = c.write
         _close = c.close
         _isEmpty = c.isEmpty
+        _isClosed = c.isClosed
     }
 
 }

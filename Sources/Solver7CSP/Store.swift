@@ -100,14 +100,6 @@ public class AnyStore<T>: Store {
         try _put(item)
     }
 
-    /*
-    private let _putForNode: (_ item: T?) -> (Int, U: StoreNode?)
-
-    public func putForNode(_ item: T?) -> (Int, U: StoreNode?) {
-        _putForNode(item)
-    }
-     */
-
     private let _get: () throws -> T?
 
     public func get() throws -> T? {
