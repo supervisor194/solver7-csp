@@ -201,7 +201,6 @@ class SelectableChannelTests : XCTestCase {
                     ch1.disable()
                 }
             } catch {
-                XCTFail("problems with reader")
             }
         }
         var cnt2 = 0
@@ -213,7 +212,6 @@ class SelectableChannelTests : XCTestCase {
                     ch2.disable()
                 }
             } catch {
-                XCTFail("problems with reader")
             }
         }
         var sum = 0.0
@@ -225,7 +223,6 @@ class SelectableChannelTests : XCTestCase {
                     ch3.disable()
                 }
             } catch {
-                XCTFail("problems with reader")
             }
         }
         let latch = CountdownLatch(1)
@@ -258,12 +255,23 @@ class SelectableChannelTests : XCTestCase {
         ch1.close()
         ch2.close()
         try ch3.write(3939.319)
-
         ch3.close()
 
-        try ch1.write(99)
-        try ch2.write("won't make it")
-        try ch3.write(-10000.30)
+        do {
+            try ch1.write(99)
+            XCTFail("should not get here")
+        } catch {
+        }
+        do {
+            try ch2.write("won't make it")
+            XCTFail("should not get here")
+        } catch {
+        }
+        do {
+            try ch3.write(-10000.30)
+            XCTFail("should not get here")
+        } catch {
+        }
 
         var timeoutAt = TimeoutState.computeTimeoutTimespec(millis: 5000)
         latch.await(&timeoutAt)
@@ -272,6 +280,10 @@ class SelectableChannelTests : XCTestCase {
         XCTAssertEqual(88, cnt)
         XCTAssertEqual(1, cnt2)
         XCTAssertEqual(3950.709, sum)
+
+        XCTAssertTrue(ch1.isClosed())
+        XCTAssertTrue(ch2.isClosed())
+        XCTAssertTrue(ch3.isClosed())
 
     }
 
